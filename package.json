@@ -1,0 +1,14 @@
+{
+  "name": "virtual-ifthar-table",
+  "version": "1.0.0",
+  "description": "3D Virtual Ifthar Table with Real-time Multiplayer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "npx nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  }
+}

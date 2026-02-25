@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Ifthar Table – 3D</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Join Screen -->
+    <div id="joinScreen" class="screen">
+        <div class="join-container">
+            <h1>Virtual Ifthar Table</h1>
+            <p>Join Muslims and non-Muslims around a virtual ifthar table</p>
+            <div class="input-group">
+                <label for="username">Your Name:</label>
+                <input type="text" id="username" placeholder="Enter your name" maxlength="20">
+                <div id="joinError" class="error-msg hidden"></div>
+            </div>
+            <div class="input-group">
+                <label>Choose Avatar:</label>
+                <div id="avatarSelection" class="avatar-selection"></div>
+                <input type="file" id="avatarUpload" accept="image/*" style="display:none">
+            </div>
+            <button id="joinButton" class="join-btn" disabled>Join Table</button>
+        </div>
+    </div>
+
+    <!-- 3D Table Screen -->
+    <div id="tableScreen" class="screen hidden">
+        <canvas id="threeCanvas"></canvas>
+
+        <div class="game-overlay">
+            <div class="header">
+                <h1>🌙 Virtual Ifthar Table</h1>
+                <div id="countdown" class="countdown">Time until Ifthar: <span id="timer">00:00</span></div>
+            </div>
+
+            <div class="hint-bar" id="hintBar">
+                👐 You are seated at the table — your hands are visible below
+            </div>
+
+            <div class="control-bar">
+                <button id="profileBtn" class="ctrl-btn">👤 Profile</button>
+                <button id="micBtn" class="ctrl-btn">🎤 Mic Off</button>
+                <button id="viewBtn" class="ctrl-btn">🔭 Wide</button>
+            </div>
+
+            <div class="center-flex"><!-- spacer --></div>
+
+            <div class="ifthar-actions hidden" id="iftharActions">
+                <p class="ifthar-msg">🎉 Iftar time! Break your fast!</p>
+                <button id="eatDate" class="action-btn">🌴 Eat Date</button>
+                <button id="drinkWater" class="action-btn">💧 Drink Water</button>
+            </div>
+
+            <div class="center-flex2"><!-- spacer --></div>
+        </div>
+
+        <!-- Chat UI -->
+        <button id="chatToggleBtn" class="chat-toggle-btn">💬 Chat</button>
+        <div id="chatPopup" class="chat-popup hidden">
+            <div class="chat-header">
+                <h3>Table Chat</h3>
+                <button id="chatCloseBtn">&times;</button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Type your message..." maxlength="200">
+                <button id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
