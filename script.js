@@ -446,9 +446,18 @@ function setupSocketListeners() {
         if (user.id !== currentUser?.id) {
             addUser(user);
             addMessage('System', `${user.name} joined the table 🌙`, false);
+            
+            // Establish voice connection to new user (even if mic is currently off)
+            if (voiceChat) {
+                voiceChat.createPeerConnection(user.id, true);
+            }
         } else {
             // We joined successfully
             addMessage('System', `Welcome ${user.name} to the Virtual Ifthar Table! 🌙`, false);
+            // Establish connections to all existing users
+            if (voiceChat) {
+                voiceChat.broadcastOffer();
+            }
         }
     });
 
@@ -831,16 +840,139 @@ function buildFood() {
     }
 }
 
+// ─── Full-Body Avatar & Chair Creation ────────────────────────────────────────
+
+// Create a full-body seated avatar (torso, arms, legs, head)
+function makeFullBody(styleIdx) {
+    const s = avatarStyles[styleIdx] || avatarStyles[0];
+    const group = new THREE.Group();
+    
+    const skinColor = new THREE.Color(s.skin);
+    const bodyColor = new THREE.Color(s.body);
+    const skinMat = new THREE.MeshPhongMaterial({ color: skinColor, shininess: 14 });
+    const bodyMat = new THREE.MeshPhongMaterial({ color: bodyColor, shininess: 10 });
+
+    // === HEAD (at top, using existing head geometry) ===
+    const head = makeUserHead(styleIdx);
+    head.position.set(0, 0.35, 0);
+    group.add(head);
+
+    // === TORSO (seated upper body) ===
+    const torso = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.14, 0.26, 8),
+        bodyMat
+    );
+    torso.position.set(0, 0.05, 0);
+    torso.castShadow = true;
+    group.add(torso);
+
+    // === ARMS (bent forward, typing position) ===
+    const leftArm = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.028, 0.024, 0.22, 6),
+        skinMat
+    );
+    leftArm.position.set(-0.16, 0.12, 0.08);
+    leftArm.rotation.z = 0.35;
+    leftArm.castShadow = true;
+    group.add(leftArm);
+
+    const rightArm = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.028, 0.024, 0.22, 6),
+        skinMat
+    );
+    rightArm.position.set(0.16, 0.12, 0.08);
+    rightArm.rotation.z = -0.35;
+    rightArm.castShadow = true;
+    group.add(rightArm);
+
+    // === LEGS (bent, seated position) ===
+    const leftLeg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.032, 0.032, 0.28, 6),
+        bodyMat
+    );
+    leftLeg.position.set(-0.08, -0.18, 0.05);
+    leftLeg.rotation.z = 0.25;
+    leftLeg.castShadow = true;
+    group.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.032, 0.032, 0.28, 6),
+        bodyMat
+    );
+    rightLeg.position.set(0.08, -0.18, 0.05);
+    rightLeg.rotation.z = -0.25;
+    rightLeg.castShadow = true;
+    group.add(rightLeg);
+
+    return group;
+}
+
+// Create a simple wooden chair
+function makeChair() {
+    const group = new THREE.Group();
+    const woodColor = new THREE.Color(0x5c3317); // wood brown
+    const woodMat = new THREE.MeshPhongMaterial({ color: woodColor, shininess: 8 });
+
+    // === SEAT (main platform) ===
+    const seat = new THREE.Mesh(
+        new THREE.BoxGeometry(0.24, 0.06, 0.24),
+        woodMat
+    );
+    seat.position.set(0, 0, 0);
+    seat.castShadow = true;
+    group.add(seat);
+
+    // === BACKREST (vertical support) ===
+    const backrest = new THREE.Mesh(
+        new THREE.BoxGeometry(0.24, 0.28, 0.08),
+        woodMat
+    );
+    backrest.position.set(0, 0.18, -0.12);
+    backrest.castShadow = true;
+    group.add(backrest);
+
+    // === CHAIR LEGS (four support posts) ===
+    const legPositions = [
+        [-0.11, -0.08, -0.11],
+        [ 0.11, -0.08, -0.11],
+        [-0.11, -0.08,  0.11],
+        [ 0.11, -0.08,  0.11],
+    ];
+
+    legPositions.forEach(([x, y, z]) => {
+        const leg = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.018, 0.018, 0.16, 6),
+            woodMat
+        );
+        leg.position.set(x, y, z);
+        leg.castShadow = true;
+        group.add(leg);
+    });
+
+    return group;
+}
+
 // ─── Player Hands (camera-local) ──────────────────────────────────────────────
 function buildPlayerHands() {
     const styleIdx = typeof selectedAvatar === 'number' ? selectedAvatar : 0;
-    const skinHex = avatarStyles[styleIdx]?.skin || '#FFDBB4';
-    const skin = new THREE.Color(skinHex);
 
-    playerL = makeHand(skin, true);
-    playerR = makeHand(skin, false);
+    // Create full-body avatar positioned at bottom of camera view
+    const playerBody = makeFullBody(styleIdx);
+    playerBody.position.set(0, -0.65, -0.7);
+    playerBody.scale.set(0.85, 0.85, 0.85);
+    camera.add(playerBody);
 
-    // Position in camera-local space so they appear at bottom of screen
+    // Create chair beneath player
+    const playerChair = makeChair();
+    playerChair.position.set(0, -0.92, -0.65);
+    playerChair.scale.set(1.2, 1.2, 1.2);
+    camera.add(playerChair);
+
+    // Keep old hand references for compatibility, but also keep hands visible
+    playerL = makeHand(new THREE.Color(avatarStyles[styleIdx]?.skin || '#FFDBB4'), true);
+    playerR = makeHand(new THREE.Color(avatarStyles[styleIdx]?.skin || '#FFDBB4'), false);
+
+    // Position hands for table interaction at bottom
     playerL.position.set(-0.22, -0.42, -0.58);
     playerR.position.set(0.22, -0.42, -0.58);
     playerL.rotation.x = 0.28;
@@ -892,39 +1024,46 @@ function addUserToScene(user, seatIdx) {
     if (!seat) return;
 
     const styleIdx = typeof user.avatar === 'number' ? user.avatar : 0;
+    const Y = 0.88; // Slightly higher for seated avatar
+
+    // Create chair at seating position
+    const chair = makeChair();
+    chair.position.set(seat.x, Y - 0.18, seat.z);
+    chair.rotation.y = seat.ry;
+    scene.add(chair);
+
+    // Create full-body seated avatar
+    const body = makeFullBody(styleIdx);
+    body.position.set(seat.x, Y, seat.z + 0.08);
+    body.rotation.y = seat.ry + Math.PI; // Face toward table center
+    scene.add(body);
+
+    // Name sprite positioned above player's head
+    const ns = makeNameSprite(user.name);
+    ns.position.set(seat.x, Y + 0.65, seat.z + 0.04);
+    scene.add(ns);
+
+    // Keep hands for compatibility with eat/drink animations
     const skinHex = avatarStyles[styleIdx]?.skin || '#F5CBA7';
     const skin = new THREE.Color(skinHex);
-    const Y = 0.905;
-
-    // Hands on table surface
     const lh = makeHand(skin, true);
     const rh = makeHand(skin, false);
 
-    lh.position.set(seat.x - 0.12, Y, seat.z + 0.1);
-    rh.position.set(seat.x + 0.12, Y, seat.z + 0.1);
+    lh.position.set(seat.x - 0.12, Y - 0.18, seat.z + 0.1);
+    rh.position.set(seat.x + 0.12, Y - 0.18, seat.z + 0.1);
     lh.rotation.set(0.42, seat.ry, 0);
     rh.rotation.set(0.42, seat.ry, 0);
     scene.add(lh);
     scene.add(rh);
 
-    // Mini head + body
-    const head = makeUserHead(styleIdx);
-    head.position.set(seat.x, Y + 0.38, seat.z + 0.06);
-    head.rotation.y = seat.ry + Math.PI;
-    scene.add(head);
-
-    // Name sprite
-    const ns = makeNameSprite(user.name);
-    ns.position.set(seat.x, Y + 0.7, seat.z + 0.04);
-    scene.add(ns);
-
-    otherMeshes[user.id] = { lh, rh, head, ns };
+    // Store all mesh references
+    otherMeshes[user.id] = { lh, rh, head: body, chair, ns };
 }
 
 function removeUserFromScene(userId) {
     const m = otherMeshes[userId];
     if (!m) return;
-    [m.lh, m.rh, m.head, m.ns].forEach(o => scene.remove(o));
+    [m.lh, m.rh, m.head, m.chair, m.ns].forEach(o => scene.remove(o));
     delete otherMeshes[userId];
 }
 

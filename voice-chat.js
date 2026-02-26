@@ -75,7 +75,8 @@ class VoiceChat {
                 this.isMicEnabled = true;
                 this.setupVoiceActivityDetection();
                 this.notifyMicStatusChanged();
-                // no need to renegotiate, tracks are already part of existing peers
+                // Renegotiate with peers in case new connections were created while mic was off
+                await this.renegotiateConnections();
                 return true;
             }
 
@@ -101,8 +102,9 @@ class VoiceChat {
             this.setupVoiceActivityDetection();
             this.notifyMicStatusChanged();
 
-            // Send offer to all existing peers (in case new users joined while we were muted)
-            this.broadcastOffer();
+            // After enabling mic, renegotiate with peers to send audio track
+            // Existing connections will need to have the track added
+            this.renegotiateConnections();
 
             return true;
         } catch (error) {
@@ -194,12 +196,48 @@ class VoiceChat {
     }
 
     /**
-     * Broadcast offer to all connected users (full mesh topology)
+     * Renegotiate with peers to add/update audio tracks
+     * Called after enabling microphone to send audio to existing connections
      */
-    async broadcastOffer() {
+    async renegotiateConnections() {
         if (!this.isMicEnabled || !this.micStream) return;
 
+        for (const userId in this.peers) {
+            try {
+                const peer = this.peers[userId];
+                if (!peer || !peer._pc) continue;
+
+                // Add or replace audio track
+                const audioTracks = this.micStream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    const audioTrack = audioTracks[0];
+                    const senders = peer._pc.getSenders();
+                    const audioSender = senders.find(s => s.track?.kind === 'audio');
+
+                    if (audioSender) {
+                        // Replace existing audio track
+                        await audioSender.replaceTrack(audioTrack);
+                        console.log(`Replaced audio track for ${userId}`);
+                    } else {
+                        // Add new audio track
+                        await peer._pc.addTrack(audioTrack, this.micStream);
+                        console.log(`Added audio track for ${userId}`);
+                    }
+                }
+            } catch (error) {
+                console.warn(`Error renegotiating with ${userId}:`, error);
+            }
+        }
+    }
+
+    /**
+     * Broadcast offer to all connected users (full mesh topology)
+     * This creates initiator connections to receive audio from other peers.
+     * Users can receive audio even with mic disabled.
+     */
+    async broadcastOffer() {
         // Get list of all users except self
+        // Don't return early - users should receive audio even with mic off
         this.socket.emit('voice-get-peers', (userIds) => {
             userIds.forEach(userId => {
                 if (!this.peers[userId]) {
@@ -211,16 +249,19 @@ class VoiceChat {
 
     /**
      * Create a WebRTC peer connection
+     * Connections are established for receiving audio regardless of mic status.
+     * The local stream is only added if mic is enabled.
      */
     async createPeerConnection(userId, initiator = false) {
         try {
             if (this.peers[userId]) return; // Already connected
 
             // Simple Peer configuration
+            // Only include stream if mic is enabled; we still receive from others
             const peerConfig = {
                 initiator: initiator,
                 trickleIce: true,
-                stream: this.micStream || undefined,
+                ...(this.isMicEnabled && this.micStream && { stream: this.micStream }),
                 config: {
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
@@ -329,6 +370,7 @@ class VoiceChat {
 
     /**
      * Handle remote audio stream
+     * Creates audio element and handles browser autoplay policies
      */
     handleRemoteStream(userId, stream) {
         try {
@@ -338,16 +380,31 @@ class VoiceChat {
                 audioEl = document.createElement('audio');
                 audioEl.autoplay = true;
                 audioEl.playsinline = true;
+                audioEl.muted = false;  // Explicitly unmute to ensure audio plays
                 audioEl.style.display = 'none';
                 document.body.appendChild(audioEl);
                 this.audioElements[userId] = audioEl;
             }
 
-            // Set stream and ensure playback
+            // Set stream
             audioEl.srcObject = stream;
-            audioEl.play().catch(err => {
-                console.warn(`Audio playback error for ${userId}:`, err);
-            });
+            
+            // Handle autoplay policy: try to play, if blocked, wait for user interaction
+            const playPromise = audioEl.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .catch(err => {
+                        console.warn(`Audio playback deferred for ${userId} (autoplay policy):`, err.name);
+                        // Set up a handler to play on user interaction
+                        const playOnInteraction = () => {
+                            audioEl.play().catch(e => console.error('Could not play audio:', e));
+                            document.removeEventListener('click', playOnInteraction);
+                            document.removeEventListener('touchstart', playOnInteraction);
+                        };
+                        document.addEventListener('click', playOnInteraction);
+                        document.addEventListener('touchstart', playOnInteraction);
+                    });
+            }
 
         } catch (error) {
             console.error(`Error handling remote stream for ${userId}:`, error);

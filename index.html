@@ -1,85 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="true">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#06021a">
     <title>Virtual Ifthar Table – 3D</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <!-- Join Screen -->
-    <div id="joinScreen" class="screen">
+    <div id="joinScreen" class="screen join-screen">
         <div class="join-container">
-            <h1>Virtual Ifthar Table</h1>
-            <p>Join Muslims and non-Muslims around a virtual ifthar table</p>
-            <div class="input-group">
-                <label for="username">Your Name:</label>
-                <input type="text" id="username" placeholder="Enter your name" maxlength="20">
-                <div id="joinError" class="error-msg hidden"></div>
+            <div class="join-header">
+                <h1>🌙 Virtual Ifthar Table</h1>
+                <p>Join the community</p>
             </div>
-            <div class="input-group">
-                <label>Choose Avatar:</label>
-                <div id="avatarSelection" class="avatar-selection"></div>
-                <input type="file" id="avatarUpload" accept="image/*" style="display:none">
+            
+            <div class="join-form">
+                <div class="input-group">
+                    <label for="username">Your Name</label>
+                    <input type="text" id="username" placeholder="Enter your name" maxlength="20" autocomplete="name">
+                    <div id="joinError" class="error-msg hidden"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Choose Your Avatar</label>
+                    <div id="avatarSelection" class="avatar-selection"></div>
+                    <input type="file" id="avatarUpload" accept="image/*" class="hidden-input">
+                </div>
+                
+                <button id="joinButton" class="join-btn">Join Table</button>
             </div>
-            <button id="joinButton" class="join-btn" disabled>Join Table</button>
         </div>
     </div>
 
     <!-- 3D Table Screen -->
-    <div id="tableScreen" class="screen hidden">
-        <canvas id="threeCanvas"></canvas>
+    <div id="tableScreen" class="screen hidden table-screen">
+        <canvas id="threeCanvas" class="game-canvas"></canvas>
 
         <div class="game-overlay">
-            <div class="header">
-                <h1>🌙 Virtual Ifthar Table <span
-                        style="font-size: 0.6em; vertical-align: middle; background: #ffd700; color: #06021a; padding: 2px 8px; border-radius: 4px; margin-left: 8px;">3D</span>
-                </h1>
-                <div id="countdown" class="countdown">Time until Ifthar: <span id="timer">00:00</span></div>
-            </div>
-
-            <div class="hint-bar" id="hintBar">
-                👐 You are seated at the table — your hands are visible below
-            </div>
-
-            <div class="control-bar">
-                <button id="profileBtn" class="ctrl-btn">👤 Profile</button>
-                <button id="micBtn" class="ctrl-btn" title="Enable/Disable Microphone for Voice Chat">🎤 Mic Off</button>
-                <div id="voiceConnectionStatus" class="voice-status-indicator hidden" title="Voice Chat Status">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Voice Chat Connected</span>
+            <!-- Header with timer -->
+            <header class="game-header">
+                <div class="header-top">
+                    <h1 class="game-title">🌙 Table</h1>
+                    <div class="timer-section">
+                        <span class="timer-label">Time:</span>
+                        <div class="timer-value"><span id="timer">00:00</span></div>
+                    </div>
                 </div>
-                <button id="viewBtn" class="ctrl-btn">🔭 Wide</button>
-            </div>
+                <div class="hint-bar" id="hintBar">You are seated at the table</div>
+            </header>
 
-            <div class="center-flex"><!-- spacer --></div>
+            <!-- Main control bar -->
+            <nav class="control-bar">
+                <button id="profileBtn" class="ctrl-btn" aria-label="Profile">👤</button>
+                <button id="micBtn" class="ctrl-btn" aria-label="Microphone" title="Toggle voice chat">🎤</button>
+                <div id="voiceConnectionStatus" class="voice-status-indicator hidden" aria-label="Voice status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connected</span>
+                </div>
+                <button id="viewBtn" class="ctrl-btn" aria-label="View mode">🔭</button>
+            </nav>
 
+            <!-- Ifthar actions (initially hidden) -->
             <div class="ifthar-actions hidden" id="iftharActions">
-                <p class="ifthar-msg">🎉 Iftar time! Break your fast!</p>
-                <button id="eatDate" class="action-btn">🌴 Eat Date</button>
-                <button id="drinkWater" class="action-btn">💧 Drink Water</button>
+                <p class="ifthar-msg">🎉 Iftar time!</p>
+                <div class="action-buttons">
+                    <button id="eatDate" class="action-btn">🌴 Eat</button>
+                    <button id="drinkWater" class="action-btn">💧 Drink</button>
+                </div>
             </div>
-
-            <div class="center-flex2"><!-- spacer --></div>
         </div>
 
-        <!-- Chat UI -->
-        <button id="chatToggleBtn" class="chat-toggle-btn">💬 Chat</button>
+        <!-- Chat UI (mobile-optimized) -->
+        <button id="chatToggleBtn" class="chat-toggle-btn" aria-label="Toggle chat">💬</button>
         <div id="chatPopup" class="chat-popup hidden">
             <div class="chat-header">
-                <h3>Table Chat</h3>
-                <input type="text" id="chatSearch" class="chat-search" placeholder="Search messages...">
-                <button id="chatCloseBtn">&times;</button>
+                <h2>Chat</h2>
+                <input type="text" id="chatSearch" class="chat-search" placeholder="Search..." aria-label="Search messages">
+                <button id="chatCloseBtn" aria-label="Close chat">&times;</button>
             </div>
-            <div class="typing-indicator" id="typingIndicator"></div>
-            <div class="chat-messages" id="chatMessages"></div>
+            <div class="typing-indicator" id="typingIndicator" aria-live="polite"></div>
+            <div class="chat-messages" id="chatMessages" role="log" aria-label="Message history"></div>
             <div class="chat-input">
-                <button id="attachBtn" class="attach-btn" title="Attach file/image">📎</button>
+                <button id="attachBtn" class="attach-btn" aria-label="Attach file">📎</button>
                 <input type="file" id="chatFileInput" accept="*/*" class="hidden-input">
-                <input type="text" id="messageInput" placeholder="Type your message..." maxlength="200">
-                <button id="sendButton">Send</button>
+                <input type="text" id="messageInput" placeholder="Message..." maxlength="200" aria-label="Message input">
+                <button id="sendButton" aria-label="Send message">Send</button>
             </div>
         </div>
     </div>
