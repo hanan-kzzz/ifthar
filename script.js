@@ -14,16 +14,16 @@ const TABLE_SEATS = [
     { x: 0.72, z: 0.36, ry: -1.40 },
 ];
 
-// ─── Avatar Styles ────────────────────────────────────────────────────────────
+// ─── Avatar Styles - Anime Full-Body Characters ────────────────────────────
 const avatarStyles = [
-    { skin: '#FFDBB4', hair: '#2C1810', body: '#667eea', hairStyle: 'short', accessory: '' },
-    { skin: '#F5CBA7', hair: '#4A3728', body: '#e74c3c', hairStyle: 'long', accessory: '' },
-    { skin: '#C68642', hair: '#1A1A1A', body: '#27ae60', hairStyle: 'curly', accessory: '' },
-    { skin: '#8D5524', hair: '#3D2B1F', body: '#f39c12', hairStyle: 'bun', accessory: 'hijab' },
-    { skin: '#FDDBB4', hair: '#C8A96E', body: '#9b59b6', hairStyle: 'long', accessory: '' },
-    { skin: '#FFE0BD', hair: '#A0522D', body: '#1abc9c', hairStyle: 'short', accessory: 'glasses' },
-    { skin: '#D4956A', hair: '#2C1810', body: '#e67e22', hairStyle: 'curly', accessory: 'headband' },
-    { skin: '#FDDBB4', hair: '#4A3728', body: '#2980b9', hairStyle: 'none', accessory: 'hat' },
+    { name: 'Sakura', skin: '#FFDBB4', hair: '#FF69B4', bodyTop: '#E8B4D9', bodyBottom: '#FFD1DC', hairStyle: 'long', eyeStyle: 'large-sparkle', expression: 'smile', pose: 'casual', accessories: ['ribbon'] },
+    { name: 'Akira', skin: '#F5CBA7', hair: '#1a1a2e', bodyTop: '#667eea', bodyBottom: '#333366', hairStyle: 'spiky', eyeStyle: 'sharp', expression: 'determined', pose: 'confident', accessories: ['necklace'] },
+    { name: 'Yuki', skin: '#D4956A', hair: '#4A7BA7', bodyTop: '#87CEEB', bodyBottom: '#4682B4', hairStyle: 'twintails', eyeStyle: 'large-sparkle', expression: 'cheerful', pose: 'playful', accessories: ['bow'] },
+    { name: 'Kaito', skin: '#C68642', hair: '#2C1810', bodyTop: '#2980b9', bodyBottom: '#1a1a2e', hairStyle: 'short-neat', eyeStyle: 'cool', expression: 'calm', pose: 'relaxed', accessories: ['watch'] },
+    { name: 'Aiko', skin: '#FDDBB4', hair: '#C8A96E', bodyTop: '#9b59b6', bodyBottom: '#8B4789', hairStyle: 'wavy', eyeStyle: 'gentle', expression: 'sweet', pose: 'graceful', accessories: ['flower'] },
+    { name: 'Taro', skin: '#FFE0BD', hair: '#8B4513', bodyTop: '#DC143C', bodyBottom: '#8B0000', hairStyle: 'medium-tousled', eyeStyle: 'confident', expression: 'energetic', pose: 'action', accessories: ['scar'] },
+    { name: 'Hana', skin: '#8D5524', hair: '#3D2B1F', bodyTop: '#f39c12', bodyBottom: '#FF8C00', hairStyle: 'bun', eyeStyle: 'wise', expression: 'thoughtful', pose: 'serene', accessories: ['headband'] },
+    { name: 'Riku', skin: '#FDDBB4', hair: '#4A3728', bodyTop: '#FF6347', bodyBottom: '#FF4500', hairStyle: 'spikey-wild', eyeStyle: 'fierce', expression: 'intense', pose: 'powerful', accessories: ['battle-scars'] },
 ];
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
@@ -159,13 +159,13 @@ function init() {
     startCountdown();
 }
 
-// ─── Avatar Picker (CSS cartoon, same as before) ──────────────────────────────
+// ─── Avatar Picker - Anime Full-Body Characters ──────────────────────────────
 function generateAvatarOptions() {
     avatarSel.innerHTML = '';
     avatarStyles.forEach((style, i) => {
         const el = document.createElement('div');
-        el.className = 'avatar-option' + (selectedAvatar === i ? ' selected' : '');
-        el.innerHTML = buildCartoonHTML(style);
+        el.className = 'avatar-option anime' + (selectedAvatar === i ? ' selected' : '');
+        el.innerHTML = buildAnimeHTML(style);
         el.addEventListener('click', () => selectAvatar(i, el));
         avatarSel.appendChild(el);
     });
@@ -184,18 +184,62 @@ function generateAvatarOptions() {
     checkJoin();
 }
 
-function buildCartoonHTML(s) {
-    let h = '';
-    if (s.hairStyle === 'short') h = `<div class="ch-hair ch-hair-short" style="background:${s.hair}"></div>`;
-    else if (s.hairStyle === 'long') h = `<div class="ch-hair ch-hair-long" style="background:${s.hair}"></div><div class="ch-hair-side" style="background:${s.hair}"></div>`;
-    else if (s.hairStyle === 'curly') h = `<div class="ch-hair ch-hair-curly" style="background:${s.hair}"></div>`;
-    else if (s.hairStyle === 'bun') h = `<div class="ch-hair ch-hair-bun" style="background:${s.hair}"></div>`;
-    let a = '';
-    if (s.accessory === 'glasses') a = `<div class="ch-glasses"><span></span><span></span></div>`;
-    else if (s.accessory === 'hijab') { a = `<div class="ch-hijab" style="background:${s.body}"></div>`; h = ''; }
-    else if (s.accessory === 'hat') { a = `<div class="ch-hat" style="background:${s.body}"><div class="ch-hat-brim"></div></div>`; h = ''; }
-    else if (s.accessory === 'headband') a = `<div class="ch-headband" style="background:${s.body}"></div>`;
-    return `<div class="cartoon-char"><div class="ch-head" style="background:${s.skin}">${h}${a}<div class="ch-face"><div class="ch-eyes"><div class="ch-eye"><div class="ch-pupil"></div></div><div class="ch-eye"><div class="ch-pupil"></div></div></div><div class="ch-mouth"></div><div class="ch-cheeks"><div class="ch-cheek"></div><div class="ch-cheek"></div></div></div><div class="ch-ear ch-ear-l" style="background:${s.skin}"></div><div class="ch-ear ch-ear-r" style="background:${s.skin}"></div></div><div class="ch-body" style="background:${s.body}"><div class="ch-body-shine"></div></div></div>`;
+function buildAnimeHTML(s) {
+    // Hair styling
+    let hairHtml = '';
+    if (s.hairStyle === 'long') {
+        hairHtml = `<div class="anime-hair anime-hair-long" style="background:${s.hair}"></div><div class="anime-hair-side anime-hair-side-l" style="background:${s.hair}"></div><div class="anime-hair-side anime-hair-side-r" style="background:${s.hair}"></div>`;
+    } else if (s.hairStyle === 'twintails') {
+        hairHtml = `<div class="anime-hair anime-hair-twintails" style="background:${s.hair}"></div><div class="anime-twintail anime-twintail-l" style="background:${s.hair}"></div><div class="anime-twintail anime-twintail-r" style="background:${s.hair}"></div>`;
+    } else if (s.hairStyle === 'spiky') {
+        hairHtml = `<div class="anime-hair anime-hair-spiky" style="background:${s.hair}"></div><div class="anime-hair-spike anime-spike-l" style="background:${s.hair}"></div><div class="anime-hair-spike anime-spike-r" style="background:${s.hair}"></div><div class="anime-hair-spike anime-spike-c" style="background:${s.hair}"></div>`;
+    } else if (s.hairStyle === 'wavy') {
+        hairHtml = `<div class="anime-hair anime-hair-wavy" style="background:${s.hair}"></div><div class="anime-hair-wave" style="background:${s.hair}"></div>`;
+    } else if (s.hairStyle === 'short-neat') {
+        hairHtml = `<div class="anime-hair anime-hair-short-neat" style="background:${s.hair}"></div>`;
+    } else if (s.hairStyle === 'medium-tousled') {
+        hairHtml = `<div class="anime-hair anime-hair-tousled" style="background:${s.hair}"></div>`;
+    } else if (s.hairStyle === 'bun') {
+        hairHtml = `<div class="anime-hair anime-hair-bun" style="background:${s.hair}"></div><div class="anime-hair-bun-top" style="background:${s.hair}"></div>`;
+    } else if (s.hairStyle === 'spikey-wild') {
+        hairHtml = `<div class="anime-hair anime-hair-wild" style="background:${s.hair}"></div><div class="anime-hair-wildspike" style="background:${s.hair}"></div>`;
+    }
+
+    // Eyes based on style
+    let eyeClass = 'anime-eye';
+    if (s.eyeStyle === 'large-sparkle') eyeClass += ' anime-eye-sparkle';
+    else if (s.eyeStyle === 'sharp') eyeClass += ' anime-eye-sharp';
+    else if (s.eyeStyle === 'cool') eyeClass += ' anime-eye-cool';
+    else if (s.eyeStyle === 'gentle') eyeClass += ' anime-eye-gentle';
+    else if (s.eyeStyle === 'confident') eyeClass += ' anime-eye-confident';
+    else if (s.eyeStyle === 'wise') eyeClass += ' anime-eye-wise';
+    else if (s.eyeStyle === 'fierce') eyeClass += ' anime-eye-fierce';
+
+    // Mouth/expression
+    let expressionClass = 'anime-mouth';
+    if (s.expression === 'smile') expressionClass += ' anime-smile';
+    else if (s.expression === 'determined') expressionClass += ' anime-determined';
+    else if (s.expression === 'cheerful') expressionClass += ' anime-cheerful';
+    else if (s.expression === 'calm') expressionClass += ' anime-calm';
+    else if (s.expression === 'sweet') expressionClass += ' anime-sweet';
+    else if (s.expression === 'energetic') expressionClass += ' anime-energetic';
+    else if (s.expression === 'thoughtful') expressionClass += ' anime-thoughtful';
+    else if (s.expression === 'intense') expressionClass += ' anime-intense';
+
+    // Accessories
+    let accessoriesHtml = '';
+    if (s.accessories && s.accessories.length > 0) {
+        if (s.accessories.includes('ribbon')) accessoriesHtml += `<div class="anime-accessory anime-ribbon" style="background:${s.hair}"></div>`;
+        if (s.accessories.includes('bow')) accessoriesHtml += `<div class="anime-accessory anime-bow" style="background:${s.hair}"></div>`;
+        if (s.accessories.includes('headband')) accessoriesHtml += `<div class="anime-accessory anime-headband" style="background:${s.bodyTop}"></div>`;
+        if (s.accessories.includes('necklace')) accessoriesHtml += `<div class="anime-necklace"></div>`;
+        if (s.accessories.includes('flower')) accessoriesHtml += `<div class="anime-accessory anime-flower"></div>`;
+        if (s.accessories.includes('watch')) accessoriesHtml += `<div class="anime-watch"></div>`;
+        if (s.accessories.includes('scar')) accessoriesHtml += `<div class="anime-scar"></div>`;
+        if (s.accessories.includes('battle-scars')) accessoriesHtml += `<div class="anime-battle-scar"></div>`;
+    }
+
+    return `<div class="anime-character anime-pose-${s.pose}"><div class="anime-head-container">${hairHtml}<div class="anime-head" style="background:${s.skin}"><div class="anime-face"><div class="anime-eyes"><div class="${eyeClass}"><div class="anime-eye-white"></div><div class="anime-pupil"></div><div class="anime-eye-highlight"></div></div><div class="${eyeClass}"><div class="anime-eye-white"></div><div class="anime-pupil"></div><div class="anime-eye-highlight"></div></div></div><div class="${expressionClass}"></div><div class="anime-blush"><div class="anime-blush-l"></div><div class="anime-blush-r"></div></div></div></div>${accessoriesHtml}</div><div class="anime-neck"></div><div class="anime-body"><div class="anime-chest" style="background:${s.bodyTop}"><div class="anime-chest-shine"></div></div><div class="anime-waist"></div><div class="anime-legs"><div class="anime-leg anime-leg-l" style="background:${s.bodyBottom}"></div><div class="anime-leg anime-leg-r" style="background:${s.bodyBottom}"></div></div></div></div>`;
 }
 
 function selectAvatar(i, el) {

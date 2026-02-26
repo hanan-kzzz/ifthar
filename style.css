@@ -877,7 +877,551 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   RESPONSIVE BREAKPOINTS - TABLET (768px+)
+   ANIME AVATAR STYLES - FULL-BODY CHARACTERS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.avatar-option.anime {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.anime-character {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+}
+
+/* Poses */
+.anime-pose-casual {
+    transform: scale(0.95);
+}
+
+.anime-pose-confident {
+    transform: scale(0.98) rotateY(5deg);
+}
+
+.anime-pose-playful {
+    transform: scale(0.96) rotateZ(-3deg);
+}
+
+.anime-pose-relaxed {
+    transform: scale(0.94);
+}
+
+.anime-pose-graceful {
+    transform: scale(0.97) rotateY(-2deg);
+}
+
+.anime-pose-action {
+    transform: scale(0.99) scaleX(1.05);
+}
+
+.anime-pose-serene {
+    transform: scale(0.95);
+}
+
+.anime-pose-powerful {
+    transform: scale(1) scaleX(1.08);
+}
+
+/* Head Container with Hair */
+.anime-head-container {
+    position: relative;
+    margin-bottom: -8px;
+    z-index: 3;
+}
+
+/* Hair Styles */
+.anime-hair {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+}
+
+.anime-hair-long {
+    width: 42px;
+    height: 35px;
+    border-radius: 50% 50% 30% 30%;
+    box-shadow: inset -2px -4px 8px rgba(0, 0, 0, 0.2), inset 2px 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.anime-hair-side {
+    position: absolute;
+    top: -5px;
+    width: 18px;
+    height: 28px;
+    border-radius: 8px 0 12px 8px;
+    z-index: 2;
+    box-shadow: inset 1px 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.anime-hair-side-l {
+    left: -15px;
+}
+
+.anime-hair-side-r {
+    right: -15px;
+    transform: scaleX(-1);
+}
+
+.anime-hair-twintails {
+    width: 38px;
+    height: 28px;
+    border-radius: 40% 40% 50% 50%;
+    box-shadow: inset -2px -3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.anime-twintail {
+    position: absolute;
+    top: 8px;
+    width: 12px;
+    height: 32px;
+    border-radius: 6px;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.anime-twintail-l {
+    left: -10px;
+}
+
+.anime-twintail-r {
+    right: -10px;
+}
+
+.anime-hair-spiky {
+    width: 40px;
+    height: 30px;
+    border-radius: 50% 50% 30% 30%;
+}
+
+.anime-hair-spike {
+    position: absolute;
+    z-index: 5;
+}
+
+.anime-spike-l {
+    top: -12px;
+    left: -8px;
+    width: 14px;
+    height: 18px;
+    border-radius: 50% 50% 3px 3px;
+    box-shadow: inset -1px -2px 3px rgba(0, 0, 0, 0.2);
+}
+
+.anime-spike-r {
+    top: -12px;
+    right: -8px;
+    width: 14px;
+    height: 18px;
+    border-radius: 50% 50% 3px 3px;
+}
+
+.anime-spike-c {
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 20px;
+    border-radius: 50% 50% 2px 2px;
+}
+
+.anime-hair-wavy {
+    width: 42px;
+    height: 32px;
+    border-radius: 45% 45% 35% 35%;
+    box-shadow: inset -3px -4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.anime-hair-wave {
+    position: absolute;
+    top: 12px;
+    left: -12px;
+    width: 10px;
+    height: 14px;
+    border-radius: 50%;
+    opacity: 0.6;
+}
+
+.anime-hair-short-neat {
+    width: 38px;
+    height: 22px;
+    border-radius: 50% 50% 25% 25%;
+    box-shadow: inset -1px -3px 6px rgba(0, 0, 0, 0.18);
+}
+
+.anime-hair-tousled {
+    width: 40px;
+    height: 28px;
+    border-radius: 48% 48% 32% 32%;
+    box-shadow: inset -2px -3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.anime-hair-bun {
+    width: 36px;
+    height: 24px;
+    border-radius: 50% 50% 28% 28%;
+}
+
+.anime-hair-bun-top {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    z-index: 5;
+    box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.anime-hair-wild {
+    width: 44px;
+    height: 34px;
+    border-radius: 50% 50% 30% 30%;
+    box-shadow: inset -3px -4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.anime-hair-wildspike {
+    position: absolute;
+    top: -10px;
+    left: -18px;
+    width: 16px;
+    height: 22px;
+    border-radius: 50% 50% 5px 5px;
+    z-index: 5;
+    box-shadow: inset -1px -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Head and Face */
+.anime-head {
+    width: 48px;
+    height: 50px;
+    border-radius: 50% 50% 45% 45%;
+    position: relative;
+    z-index: 3;
+    box-shadow: -3px 3px 8px rgba(0, 0, 0, 0.15), inset -4px -4px 8px rgba(0, 0, 0, 0.1), inset 2px 2px 6px rgba(255, 255, 255, 0.3);
+}
+
+.anime-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 6px;
+}
+
+/* Eyes */
+.anime-eyes {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 6px;
+    z-index: 2;
+}
+
+.anime-eye {
+    position: relative;
+    width: 14px;
+    height: 16px;
+    background: white;
+    border-radius: 50% 50% 30% 70%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset -1px -2px 2px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.anime-eye-white {
+    position: absolute;
+    inset: 0;
+    background: white;
+    border-radius: inherit;
+}
+
+.anime-pupil {
+    width: 8px;
+    height: 10px;
+    background: #1a1a2e;
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+}
+
+.anime-eye-highlight {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    z-index: 2;
+    opacity: 0.7;
+}
+
+/* Eye Styles */
+.anime-eye-sparkle .anime-eye-highlight {
+    width: 6px;
+    height: 6px;
+    box-shadow: 0 0 3px rgba(255, 192, 203, 0.8);
+}
+
+.anime-eye-sharp {
+    border-radius: 40% 60% 30% 70%;
+}
+
+.anime-eye-cool {
+    border-radius: 50% 50% 20% 80%;
+}
+
+.anime-eye-gentle {
+    border-radius: 50% 50% 50% 30%;
+}
+
+.anime-eye-confident {
+    border-radius: 45% 55% 25% 75%;
+}
+
+.anime-eye-wise {
+    border-radius: 50% 50% 35% 65%;
+}
+
+.anime-eye-fierce {
+    border-radius: 35% 65% 20% 80%;
+}
+
+/* Mouth Styles */
+.anime-mouth {
+    width: 18px;
+    height: 6px;
+    border: 1.5px solid rgba(100, 50, 50, 0.4);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    position: relative;
+    margin-top: 2px;
+    background: rgba(255, 100, 120, 0.2);
+}
+
+.anime-smile {
+    border-radius: 0 0 12px 12px;
+}
+
+.anime-determined {
+    height: 4px;
+    border-radius: 0;
+}
+
+.anime-cheerful {
+    border-radius: 0 0 14px 14px;
+    background: rgba(255, 120, 140, 0.3);
+}
+
+.anime-calm {
+    border-radius: 0 0 8px 8px;
+    height: 3px;
+}
+
+.anime-sweet {
+    border-radius: 0 0 12px 12px;
+    background: rgba(255, 100, 130, 0.25);
+}
+
+.anime-energetic {
+    border-radius: 0 0 14px 14px;
+    height: 7px;
+    background: rgba(255, 140, 160, 0.3);
+}
+
+.anime-thoughtful {
+    border-radius: 0 0 6px 6px;
+    height: 3px;
+}
+
+.anime-intense {
+    border-radius: 0;
+    height: 3px;
+    border: 1.5px solid rgba(100, 50, 50, 0.6);
+}
+
+/* Blush */
+.anime-blush {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    padding: 0 4px;
+}
+
+.anime-blush-l,
+.anime-blush-r {
+    width: 8px;
+    height: 5px;
+    background: radial-gradient(ellipse, rgba(255, 140, 160, 0.5) 0%, rgba(255, 140, 160, 0) 70%);
+    border-radius: 50%;
+}
+
+/* Accessories */
+.anime-accessory {
+    position: absolute;
+    z-index: 5;
+}
+
+.anime-ribbon {
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 15px;
+    border-radius: 2px;
+}
+
+.anime-bow {
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 14px;
+    height: 8px;
+    clip-path: polygon(0 50%, 20% 20%, 20% 50%, 35% 50%, 35% 0%, 65% 0%, 65% 50%, 80% 50%, 80% 20%, 100% 50%);
+}
+
+.anime-headband {
+    top: 15px;
+    left: -2px;
+    right: -2px;
+    height: 5px;
+    border-radius: 2px;
+    z-index: 2;
+}
+
+.anime-necklace {
+    position: absolute;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 3px;
+    border: 1px solid #FFD700;
+    border-radius: 50%;
+}
+
+.anime-flower {
+    top: -4px;
+    right: -8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #FFB6C1, #FF69B4);
+}
+
+.anime-watch {
+    position: absolute;
+    bottom: 8px;
+    left: -4px;
+    width: 6px;
+    height: 6px;
+    border: 1px solid #C0C0C0;
+    border-radius: 50%;
+}
+
+.anime-scar {
+    position: absolute;
+    top: 25px;
+    left: 10px;
+    width: 8px;
+    height: 1px;
+    background: rgba(100, 0, 0, 0.4);
+    transform: rotate(-20deg);
+}
+
+.anime-battle-scar {
+    position: absolute;
+    top: 22px;
+    left: 8px;
+    width: 12px;
+    height: 2px;
+    background: linear-gradient(45deg, rgba(200, 0, 0, 0.5), transparent);
+    transform: rotate(-30deg);
+}
+
+/* Neck */
+.anime-neck {
+    width: 16px;
+    height: 8px;
+    background: inherit;
+    position: relative;
+    z-index: 2;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1));
+}
+
+/* Body */
+.anime-body {
+    width: 36px;
+    position: relative;
+    z-index: 1;
+}
+
+.anime-chest {
+    width: 100%;
+    height: 20px;
+    border-radius: 8px 8px 0 0;
+    position: relative;
+    box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.1), inset 1px 1px 3px rgba(255, 255, 255, 0.2);
+}
+
+.anime-chest-shine {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    height: 3px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.3), transparent);
+    border-radius: 2px;
+}
+
+.anime-waist {
+    width: 100%;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.anime-legs {
+    width: 100%;
+    height: 18px;
+    display: flex;
+    gap: 4px;
+    padding: 0 2px;
+}
+
+.anime-leg {
+    flex: 1;
+    border-radius: 0 0 4px 4px;
+    box-shadow: inset -1px 0 2px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.anime-leg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2px;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2));
+}
    ═══════════════════════════════════════════════════════════════════════════════ */
 @media (min-width: 768px) {
     .join-container {
