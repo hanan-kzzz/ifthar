@@ -502,6 +502,126 @@ body {
     color: #ffd700;
 }
 
+.chat-header .chat-search {
+    margin-left: 12px;
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.typing-indicator {
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    color: #ddd;
+    height: 18px;
+}
+
+/* message enhancements */
+.message {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 90%;
+    word-wrap: break-word;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+}
+
+.message .msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-size: cover;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.message .content {
+    flex: 1;
+}
+
+.message .timestamp {
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.6);
+    margin-left: 6px;
+}
+
+.message .mention {
+    background: rgba(255,215,0,0.2);
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+.react-btn, .delete-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-left: 4px;
+    opacity: 0.7;
+}
+.react-btn:hover, .delete-btn:hover {
+    opacity: 1;
+}
+
+.attach-btn {
+    background: none;
+    border: none;
+    color: #ffd700;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.msg-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.msg-controls {
+    margin-top: 4px;
+    display: flex;
+}
+
+.reaction-bar {
+    margin-top: 4px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: #ffd700;
+}
+
+.reaction {
+    background: rgba(255,215,0,0.2);
+    padding: 2px 6px;
+    border-radius: 8px;
+}
+
+/* threading/reply indentation */
+.message.reply {
+    margin-left: 30px;
+    border-left: 2px solid rgba(255,215,0,0.4);
+    padding-left: 10px;
+}
+
+/* mobile modifications for new controls */
+@media (max-width:768px) {
+    .chat-header .chat-search {
+        display: none; /* hide search on small screens to save space */
+    }
+    .typing-indicator {
+        font-size: 0.75rem;
+    }
+}
+
 #chatCloseBtn {
     background: none;
     border: none;

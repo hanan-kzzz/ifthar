@@ -18,6 +18,14 @@ A simple multiplayer website where Muslims and non-Muslims can join a virtual if
 - **Iftar Countdown**: Live timer showing time until iftar.
 - **Interactive Experience**: Click to eat dates and drink water with smooth animations.
 - **Voice Connection Status**: Visual indicator showing active voice chat connections.
+- **Mobile-Optimized Navigation**:
+  - Default 180° panoramic camera view for immersive experience
+  - Touch-friendly gestures: swipe to rotate, pinch to zoom
+  - Large touch targets (44x48px minimum) for easy mobile interaction
+  - Optimized button placement for thumb-based navigation
+  - Responsive layout for portrait and landscape orientations
+  - Smooth camera panning and FOV transitions
+  - Support for both desktop and mobile devices with proper gesture detection
 
 ## How to Use
 
@@ -34,7 +42,21 @@ A simple multiplayer website where Muslims and non-Muslims can join a virtual if
 8. When your microphone is active, others will hear you speak in real-time.
 9. Voice activity is detected automatically and shown with visual indicators.
 
-## Technology
+## Mobile & Touch Controls
+
+### Camera Navigation
+- **Default View**: 180° panoramic view for immersive experience
+- **Swipe**: Single-finger drag to rotate camera left/right and up/down
+- **Pinch Zoom**: Use two fingers to zoom in/out (adjust field of view)
+- **Camera Button**: Click to cycle between Normal (68°), Wide (110°), and Panoramic (180°) views
+
+### Touch Targets
+All interactive elements have been optimized for mobile:
+- **Buttons**: Minimum 44x48px for easy thumb tapping
+- **Avatar Selection**: Larger touch targets for easier selection
+- **Chat Button**: Positioned on the side for left/right thumb ease
+- **Action Buttons**: Large interactive areas for "Eat" and "Drink" actions
+- **Orientation Support**: Layout adapts for portrait and landscape modes
 
 - **Frontend**: HTML5, Vanilla CSS, Three.js (for 3D graphics)
 - **Backend**: Node.js, Express, Socket.io (for real-time multiplayer)

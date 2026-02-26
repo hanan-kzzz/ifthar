@@ -76,6 +76,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chat', (messageData) => {
+        // Ensure each message has a unique id and timestamp
+        if (!messageData.id) {
+            messageData.id = 'm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        }
+        if (!messageData.timestamp) {
+            messageData.timestamp = Date.now();
+        }
         // Broadcast message to all clients
         io.emit('chat-message', messageData);
     });
@@ -151,6 +158,27 @@ io.on('connection', (socket) => {
             io.emit('user-left', userId);
             io.emit('voice-user-left', { userId });
         }
+    });
+
+    // Typing indicator events
+    socket.on('typing', (data) => {
+        // data should include { userId, name }
+        socket.broadcast.emit('typing', data);
+    });
+    socket.on('stop-typing', (data) => {
+        socket.broadcast.emit('stop-typing', data);
+    });
+
+    // Message deletion
+    socket.on('delete-message', (data) => {
+        // data: { id }
+        io.emit('message-deleted', data);
+    });
+
+    // Reactions
+    socket.on('reaction', (data) => {
+        // data: { messageId, userId, emoji }
+        io.emit('reaction', data);
     });
 });
 

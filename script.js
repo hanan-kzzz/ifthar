@@ -49,6 +49,33 @@ let selectedAvatar = null;
 let iftharStarted = false;
 let socket = null;
 
+// Chat state & helpers
+let chatHistory = [];                // array of message objects
+let typingUsers = new Set();         // names currently typing
+let typingTimeout = null;            // debounce timer for stop-typing
+let replyToMessageId = null;         // for threading/replies
+let searchFilter = '';               // current search term
+// sound played when new message arrives while chat is hidden/minimized
+const newMessageSound = (() => {
+    // simple 220Hz beep for 150ms
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = 220;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.value = 0;
+        osc.start();
+        return { play: () => {
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        } };
+    } catch (e) {
+        return { play: () => {} };
+    }
+})();
+
 // Three.js objects
 let scene, camera, renderer, clock;
 let playerL, playerR;           // player hand meshes (camera-local)
@@ -199,6 +226,26 @@ function setupEventListeners() {
     joinButton.addEventListener('click', joinTable);
     sendButton.addEventListener('click', sendMessage);
     messageInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+    messageInput.addEventListener('input', () => {
+        // typing indicator
+        if (!currentUser) return;
+        socket.emit('typing', { userId: currentUser.id, name: currentUser.name });
+        if (typingTimeout) clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            socket.emit('stop-typing', { userId: currentUser.id, name: currentUser.name });
+        }, 800);
+    });
+    const chatSearch = document.getElementById('chatSearch');
+    if (chatSearch) {
+        chatSearch.addEventListener('input', e => searchMessages(e.target.value));
+    }
+    const attachBtn = document.getElementById('attachBtn');
+    if (attachBtn) {
+        attachBtn.addEventListener('click', () => {
+            chatFileInput.click();
+        });
+    }
+
     eatDateButton.addEventListener('click', eatFood);
     drinkWaterBtn.addEventListener('click', drinkWater);
 
@@ -319,11 +366,14 @@ function handleOrientationChange() {
 }
 
 function toggleChat() {
+    const opening = chatPopup.classList.contains('hidden');
     chatPopup.classList.toggle('hidden');
     chatToggleBtn.classList.toggle('hidden');
 
-    // Focus input if opening
-    if (!chatPopup.classList.contains('hidden')) {
+    if (opening) {
+        renderChat();
+        updateTypingIndicator();
+        // focus input
         setTimeout(() => messageInput.focus(), 100);
     }
 }
@@ -446,8 +496,9 @@ function setupSocketListeners() {
     });
 
     socket.on('chat-message', (data) => {
+        // incoming chat message from another user or ourselves (synced)
         if (data.senderId !== currentUser?.id) {
-            addMessage(data.sender, data.text, false);
+            handleIncomingMessage(data);
         }
     });
 
@@ -476,6 +527,31 @@ function setupSocketListeners() {
                 otherMeshes[data.userId].speakRing.visible = isSpeaking;
             }
         }
+    });
+
+    socket.on('typing', (data) => {
+        if (data && data.name && data.userId !== currentUser?.id) {
+            typingUsers.add(data.name);
+            updateTypingIndicator();
+        }
+    });
+    socket.on('stop-typing', (data) => {
+        if (data && data.name) {
+            typingUsers.delete(data.name);
+            updateTypingIndicator();
+        }
+    });
+
+    socket.on('message-deleted', (data) => {
+        if (data && data.id) {
+            chatHistory = chatHistory.filter(m => m.id !== data.id);
+            const el = chatMessages.querySelector(`div[data-id="${data.id}"]`);
+            if (el) el.remove();
+        }
+    });
+
+    socket.on('reaction', (data) => {
+        handleReaction(data);
     });
 }
 
@@ -1101,27 +1177,225 @@ function addUser(user) {
     }
 }
 // ─── Chat ─────────────────────────────────────────────────────────────────────
-function sendMessage() {
-    const msg = messageInput.value.trim();
-    if (!msg || !currentUser) return;
+function generateMessageId() {
+    return 'm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+}
 
-    socket.emit('chat', {
+function sendMessage() {
+    let msg = messageInput.value.trim();
+    if (!msg && !pendingFile && !replyToMessageId) return; // allow sending file or reply if no text
+    if (!currentUser) return;
+
+    const message = {
+        id: generateMessageId(),
         senderId: currentUser.id,
         sender: currentUser.name,
-        text: msg
-    });
+        text: msg || '',
+        timestamp: Date.now(),
+        type: pendingFile ? 'file' : 'text',
+        fileData: pendingFile ? pendingFile.data : undefined,
+        fileName: pendingFile ? pendingFile.name : undefined,
+        parentId: replyToMessageId || null,
+        reactions: {}
+    };
 
-    addMessage(currentUser.name, msg, true);
+    socket.emit('chat', message);
+    handleIncomingMessage(message, true);
+
     messageInput.value = '';
+    pendingFile = null;
+    replyToMessageId = null;
 }
 
-function addMessage(sender, text, isOwn) {
-    const el = document.createElement('div');
-    el.className = `message ${isOwn ? 'own' : 'other'}`;
-    el.innerHTML = `<div class="sender">${sender}</div><div class="text">${escapeHtml(text)}</div>`;
-    chatMessages.appendChild(el);
+// store pending file before send
+let pendingFile = null;
+
+function handleIncomingMessage(data, isLocal=false) {
+    // ignore if already in history
+    if (chatHistory.find(m => m.id === data.id)) return;
+    chatHistory.push(data);
+    if (searchFilter && !data.text.toLowerCase().includes(searchFilter.toLowerCase()) && !data.sender.toLowerCase().includes(searchFilter.toLowerCase())) {
+        // message does not match current search - skip rendering
+    } else {
+        renderMessage(data);
+    }
+    if (!isLocal && chatPopup.classList.contains('hidden')) {
+        newMessageSound.play();
+    }
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
+function renderChat() {
+    chatMessages.innerHTML = '';
+    chatHistory.forEach(msg => {
+        if (searchFilter) {
+            const txt = msg.text || '';
+            if (!txt.toLowerCase().includes(searchFilter.toLowerCase()) && !msg.sender.toLowerCase().includes(searchFilter.toLowerCase())) return;
+        }
+        renderMessage(msg);
+    });
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function renderMessage(msg) {
+    const el = document.createElement('div');
+    el.dataset.id = msg.id;
+    const own = msg.senderId === currentUser?.id;
+    el.className = 'message ' + (own ? 'own' : 'other') + (msg.parentId ? ' reply' : '');
+
+    // avatar
+    const avatarEl = document.createElement('div');
+    avatarEl.className = 'msg-avatar';
+    let avatarUrl = '';
+    const user = users.find(u => u.id === msg.senderId);
+    if (user) {
+        if (typeof user.avatar === 'string' && user.avatar.startsWith('data:')) avatarUrl = user.avatar;
+        else if (typeof user.avatar === 'number') avatarUrl = ''; // our cartoon style; skip
+    }
+    if (avatarUrl) avatarEl.style.backgroundImage = `url(${avatarUrl})`;
+    el.appendChild(avatarEl);
+
+    const content = document.createElement('div');
+    content.className = 'content';
+    // header with name and timestamp
+    const hdr = document.createElement('div');
+    hdr.className = 'msg-header';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'sender';
+    nameSpan.textContent = msg.sender;
+    hdr.appendChild(nameSpan);
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'timestamp';
+    timeSpan.textContent = new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    hdr.appendChild(timeSpan);
+    content.appendChild(hdr);
+
+    // message body
+    const body = document.createElement('div');
+    body.className = 'text';
+    let text = escapeHtml(msg.text || '');
+    // mention highlighting
+    text = text.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+    if (msg.type === 'file' && msg.fileData) {
+        const link = document.createElement('a');
+        link.href = msg.fileData;
+        link.target = '_blank';
+        link.textContent = msg.fileName || 'attachment';
+        body.appendChild(link);
+        if (text) {
+            body.insertAdjacentHTML('beforeend', `<div>${text}</div>`);
+        }
+    } else {
+        body.innerHTML = text;
+    }
+    content.appendChild(body);
+
+    // controls (react / delete)
+    const ctrl = document.createElement('div');
+    ctrl.className = 'msg-controls';
+    const reactBtn = document.createElement('button');
+    reactBtn.className = 'react-btn';
+    reactBtn.textContent = '😊';
+    reactBtn.addEventListener('click', () => showEmojiPicker(msg.id));
+    ctrl.appendChild(reactBtn);
+    // reply button available to everyone
+    const replyBtn = document.createElement('button');
+    replyBtn.className = 'react-btn';
+    replyBtn.textContent = '↩️';
+    replyBtn.title = 'Reply';
+    replyBtn.addEventListener('click', () => {
+        replyToMessageId = msg.id;
+        messageInput.focus();
+        messageInput.placeholder = `Replying to ${msg.sender}...`;
+    });
+    ctrl.appendChild(replyBtn);
+    if (own) {
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-btn';
+        delBtn.textContent = '🗑';
+        delBtn.addEventListener('click', () => deleteMessage(msg.id));
+        ctrl.appendChild(delBtn);
+    }
+    content.appendChild(ctrl);
+
+    el.appendChild(content);
+
+    // if message has reactions
+    if (msg.reactions && Object.keys(msg.reactions).length) {
+        const reactBar = document.createElement('div');
+        reactBar.className = 'reaction-bar';
+        for (const [emoji, usersObj] of Object.entries(msg.reactions)) {
+            const span = document.createElement('span');
+            span.className = 'reaction';
+            span.textContent = `${emoji} ${Object.keys(usersObj).length}`;
+            reactBar.appendChild(span);
+        }
+        el.appendChild(reactBar);
+    }
+
+    // clicking message copies text
+    el.addEventListener('click', () => {
+        if (msg.text) navigator.clipboard.writeText(msg.text).catch(() => {});
+    });
+
+    chatMessages.appendChild(el);
+}
+
+function deleteMessage(id) {
+    // remove locally and notify server
+    chatHistory = chatHistory.filter(m => m.id !== id);
+    const el = chatMessages.querySelector(`div[data-id="${id}"]`);
+    if (el) el.remove();
+    socket.emit('delete-message', { id });
+}
+
+function searchMessages(term) {
+    searchFilter = term;
+    renderChat();
+}
+
+function showEmojiPicker(messageId) {
+    // simple built-in choice prompt for demonstration
+    const emoji = prompt('Enter emoji to react with (e.g. 👍, ❤️)');
+    if (!emoji) return;
+    socket.emit('reaction', { messageId, userId: currentUser.id, emoji });
+}
+
+function updateTypingIndicator() {
+    const el = document.getElementById('typingIndicator');
+    if (!el) return;
+    if (typingUsers.size === 0) {
+        el.textContent = '';
+    } else {
+        el.textContent = Array.from(typingUsers).join(', ') + ' is typing...';
+    }
+}
+
+function handleReaction(data) {
+    const msg = chatHistory.find(m => m.id === data.messageId);
+    if (!msg) return;
+    msg.reactions = msg.reactions || {};
+    if (!msg.reactions[data.emoji]) msg.reactions[data.emoji] = {};
+    msg.reactions[data.emoji][data.userId] = true;
+    renderChat();
+}
+
+// file attachment helper
+const chatFileInput = document.getElementById('chatFileInput');
+if (chatFileInput) {
+    chatFileInput.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            pendingFile = { data: ev.target.result, name: file.name };
+            messageInput.placeholder = 'File ready to send...';
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// event listeners for chat search, typing, etc will be added in setupEventListeners below
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 

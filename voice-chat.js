@@ -65,9 +65,21 @@ class VoiceChat {
      */
     async enableMicrophone() {
         try {
-            if (this.isMicEnabled) return;
+            if (this.isMicEnabled) return true;
 
-            // Request microphone permission
+            // If we already acquired a stream previously, just re-enable its tracks
+            if (this.micStream) {
+                this.micStream.getTracks().forEach(track => {
+                    track.enabled = true;
+                });
+                this.isMicEnabled = true;
+                this.setupVoiceActivityDetection();
+                this.notifyMicStatusChanged();
+                // no need to renegotiate, tracks are already part of existing peers
+                return true;
+            }
+
+            // Otherwise request microphone permission
             this.micStream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     echoCancellation: true,
@@ -89,7 +101,7 @@ class VoiceChat {
             this.setupVoiceActivityDetection();
             this.notifyMicStatusChanged();
 
-            // Send offer to all existing peers
+            // Send offer to all existing peers (in case new users joined while we were muted)
             this.broadcastOffer();
 
             return true;
@@ -107,22 +119,21 @@ class VoiceChat {
         try {
             if (!this.isMicEnabled) return;
 
-            // Stop all local tracks
+            // Instead of tearing down peers, just mute local tracks
             if (this.micStream) {
-                this.micStream.getTracks().forEach(track => track.stop());
-                this.micStream = null;
+                this.micStream.getTracks().forEach(track => {
+                    track.enabled = false;
+                });
             }
 
-            // Stop VAD checking
+            // Stop VAD checking (we don't need to detect when muted)
             if (this.vadCheckInterval) {
                 clearInterval(this.vadCheckInterval);
                 this.vadCheckInterval = null;
             }
 
-            // Close all peer connections
-            Object.keys(this.peers).forEach(peerId => {
-                this.closePeer(peerId);
-            });
+            // Do NOT close peer connections; keep them alive so we can continue
+            // to receive other users' audio even when our mic is off.
 
             this.isMicEnabled = false;
             this.isSpeaking = false;

@@ -70,10 +70,14 @@
         <div id="chatPopup" class="chat-popup hidden">
             <div class="chat-header">
                 <h3>Table Chat</h3>
+                <input type="text" id="chatSearch" class="chat-search" placeholder="Search messages...">
                 <button id="chatCloseBtn">&times;</button>
             </div>
+            <div class="typing-indicator" id="typingIndicator"></div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input">
+                <button id="attachBtn" class="attach-btn" title="Attach file/image">📎</button>
+                <input type="file" id="chatFileInput" accept="*/*" class="hidden-input">
                 <input type="text" id="messageInput" placeholder="Type your message..." maxlength="200">
                 <button id="sendButton">Send</button>
             </div>
