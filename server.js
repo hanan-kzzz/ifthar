@@ -93,15 +93,76 @@ io.on('connection', (socket) => {
         });
     });
 
+    // ─── Voice Chat Signaling ─────────────────────────────────────────
+    socket.on('voice-get-peers', (callback) => {
+        // Return list of all other connected users (by userId, not socketId)
+        const otherUserIds = Object.values(users)
+            .filter(u => u.socketId !== socket.id)
+            .map(u => u.id);
+        if (callback) callback(otherUserIds);
+    });
+
+    socket.on('voice-offer', (data) => {
+        // Forward WebRTC offer to target user
+        if (data && data.to) {
+            socket.to(getSocketIdByUserId(data.to)).emit('voice-offer', {
+                from: users[socket.id]?.id,
+                data: data.data
+            });
+        }
+    });
+
+    socket.on('voice-answer', (data) => {
+        // Forward WebRTC answer to target user
+        if (data && data.to) {
+            socket.to(getSocketIdByUserId(data.to)).emit('voice-answer', {
+                from: users[socket.id]?.id,
+                data: data.data
+            });
+        }
+    });
+
+    socket.on('voice-ice-candidate', (data) => {
+        // Forward ICE candidate to target user
+        if (data && data.to) {
+            socket.to(getSocketIdByUserId(data.to)).emit('voice-ice-candidate', {
+                from: users[socket.id]?.id,
+                data: data.data
+            });
+        }
+    });
+
+    socket.on('voice-status-change', (statusData) => {
+        // Update and broadcast voice status
+        if (users[socket.id]) {
+            users[socket.id].voiceStatus = statusData;
+            io.emit('user-voice-status', {
+                userId: users[socket.id].id,
+                status: statusData
+            });
+        }
+    });
+
     socket.on('disconnect', () => {
         if (users[socket.id]) {
             console.log(`${users[socket.id].name} left the table`);
             const userId = users[socket.id].id;
             delete users[socket.id];
             io.emit('user-left', userId);
+            io.emit('voice-user-left', { userId });
         }
     });
 });
+
+// Helper: Get Socket ID by User ID
+function getSocketIdByUserId(userId) {
+    for (const socketId in users) {
+        if (users[socketId].id === userId) {
+            return socketId;
+        }
+    }
+    return null;
+}
 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

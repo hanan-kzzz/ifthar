@@ -46,7 +46,11 @@
 
             <div class="control-bar">
                 <button id="profileBtn" class="ctrl-btn">👤 Profile</button>
-                <button id="micBtn" class="ctrl-btn">🎤 Mic Off</button>
+                <button id="micBtn" class="ctrl-btn" title="Enable/Disable Microphone for Voice Chat">🎤 Mic Off</button>
+                <div id="voiceConnectionStatus" class="voice-status-indicator hidden" title="Voice Chat Status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Voice Chat Connected</span>
+                </div>
                 <button id="viewBtn" class="ctrl-btn">🔭 Wide</button>
             </div>
 
@@ -77,7 +81,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="voice-chat.js"></script>
     <script src="script.js"></script>
 </body>
 

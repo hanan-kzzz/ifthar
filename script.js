@@ -63,6 +63,8 @@ let isMicOn = false;
 let isSpeaking = false;
 let speakRing;                  // green torus ring on player hands when speaking
 let vadTimer;                   // setInterval for voice-activity detection
+let voiceChat = null;           // VoiceChat instance for WebRTC
+let userVoiceStatus = {};       // userId -> { isMicOn, isSpeaking }
 
 // ─── View Mode State ──────────────────────────────────────────────────────────
 const VIEW_MODES = [
@@ -103,6 +105,11 @@ function init() {
 
     socket = io();
     setupSocketListeners();
+    
+    // Initialize Voice Chat
+    voiceChat = new VoiceChat(socket);
+    voiceChat.currentUserId = currentUser?.id; // Will be set properly after join
+    setupVoiceChatListeners();
 
     // Load persisted data
     const savedName = localStorage.getItem('ifthar_name');
@@ -251,6 +258,11 @@ function joinTable() {
 
     currentUser = { id, name, avatar: selectedAvatar, plateEaten: false, glassDrank: false };
 
+    // Set current user ID for voice chat
+    if (voiceChat) {
+        voiceChat.currentUserId = currentUser.id;
+    }
+
     // In multiplayer, users array is managed via socket events
     // but we can add ourselves locally for immediate feedback
     // addUser(currentUser); 
@@ -356,11 +368,57 @@ function setupSocketListeners() {
             }
         }
     });
+
+    socket.on('user-voice-status', (data) => {
+        userVoiceStatus[data.userId] = data.status;
+        // Update visual indicators for remote users
+        if (otherMeshes[data.userId]) {
+            const isSpeaking = data.status?.isSpeaking || false;
+            if (otherMeshes[data.userId].speakRing) {
+                otherMeshes[data.userId].speakRing.visible = isSpeaking;
+            }
+        }
+    });
+}
+
+function setupVoiceChatListeners() {
+    // Listen for local voice status changes
+    window.addEventListener('voice-status-changed', (event) => {
+        const { isMicOn, isSpeaking } = event.detail;
+        updateMicBtn();
+        updateVoiceConnectionStatus();
+    });
+}
+
+function updateVoiceConnectionStatus() {
+    if (!voiceChat) return;
+    
+    const statusEl = document.getElementById('voiceConnectionStatus');
+    if (!statusEl) return;
+    
+    const connectedPeers = voiceChat.getConnectedPeers();
+    const isSpeaking = voiceChat.isUserSpeaking();
+    
+    if (connectedPeers === 0) {
+        statusEl.classList.add('hidden');
+    } else {
+        statusEl.classList.remove('hidden');
+        statusEl.classList.toggle('speaking', isSpeaking);
+        statusEl.classList.toggle('connected', !isSpeaking);
+        
+        const statusText = statusEl.querySelector('.status-text');
+        if (statusText) {
+            statusText.textContent = isSpeaking ? 
+                `🗣 Speaking (${connectedPeers} connected)` : 
+                `✓ Voice Chat (${connectedPeers} connected)`;
+        }
+    }
 }
 
 function removeUser(userId) {
     users = users.filter(u => u.id !== userId);
     removeUserFromScene(userId);
+    delete userVoiceStatus[userId];
     const msg = "Someone left the table"; // We could track names if needed
     // addMessage('System', msg, false);
 }
@@ -850,66 +908,70 @@ function buildSpeakRing() {
 
 // ─── Voice Chat ───────────────────────────────────────────────────────────────
 async function toggleMic() {
-    isMicOn ? stopMic() : await startMic();
+    if (!voiceChat) return;
+    
+    if (voiceChat.isMicrophoneEnabled()) {
+        await disableVoiceChat();
+    } else {
+        await enableVoiceChat();
+    }
 }
 
-async function startMic() {
+async function enableVoiceChat() {
+    if (!voiceChat) return;
+    
     if (!navigator.mediaDevices) {
         addMessage('System', '❌ Mic error: Use HTTPS or localhost for voice chat (Secure Context required).', false);
         return;
     }
+
     try {
-        micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        analyserNode = audioCtx.createAnalyser();
-        analyserNode.fftSize = 256;
-        analyserNode.smoothingTimeConstant = 0.7;
-        const src = audioCtx.createMediaStreamSource(micStream);
-        src.connect(analyserNode);
-        isMicOn = true;
-        updateMicBtn();
-        addMessage('System', '🎤 Microphone ON — others can hear you', false);
-        // Voice Activity Detection loop
-        const buf = new Uint8Array(analyserNode.frequencyBinCount);
-        vadTimer = setInterval(() => {
-            analyserNode.getByteFrequencyData(buf);
-            const avg = buf.reduce((a, b) => a + b, 0) / buf.length;
-            const talking = avg > 18;
-            if (talking !== isSpeaking) {
-                isSpeaking = talking;
-                if (speakRing) speakRing.visible = talking;
-                updateMicBtn();
-            }
-        }, 80);
+        const success = await voiceChat.enableMicrophone();
+        if (success) {
+            addMessage('System', '🎤 Microphone ON — starting voice connections', false);
+        } else {
+            addMessage('System', '❌ Failed to enable microphone', false);
+        }
     } catch (err) {
         addMessage('System', `❌ Mic error: ${err.message}`, false);
     }
 }
 
-function stopMic() {
-    clearInterval(vadTimer);
-    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-    if (audioCtx) { audioCtx.close(); audioCtx = null; }
-    isMicOn = false; isSpeaking = false;
-    if (speakRing) speakRing.visible = false;
-    updateMicBtn();
-    addMessage('System', '🔇 Microphone OFF', false);
+async function disableVoiceChat() {
+    if (!voiceChat) return;
+    
+    try {
+        await voiceChat.disableMicrophone();
+        addMessage('System', '🔇 Microphone OFF', false);
+    } catch (err) {
+        console.error('Error disabling voice chat:', err);
+    }
 }
 
 function updateMicBtn() {
+    if (!voiceChat) return;
+    
     const btn = document.getElementById('micBtn');
     if (!btn) return;
+    
+    const isMicOn = voiceChat.isMicrophoneEnabled();
+    const isSpeaking = voiceChat.isUserSpeaking();
+    
     if (!isMicOn) {
         btn.textContent = '🎤 Mic Off';
         btn.classList.remove('mic-on', 'mic-speaking');
     } else if (isSpeaking) {
         btn.textContent = '🎙 Speaking…';
         btn.classList.add('mic-on', 'mic-speaking');
-        btn.classList.remove = btn.classList.remove.bind(btn);
     } else {
         btn.textContent = '🎤 Mic On';
         btn.classList.add('mic-on');
         btn.classList.remove('mic-speaking');
+    }
+    
+    // Update 3D visual indicator
+    if (speakRing) {
+        speakRing.visible = isSpeaking;
     }
 }
 
@@ -1023,3 +1085,10 @@ function drinkWater() {
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', async () => {
+    if (voiceChat) {
+        await voiceChat.cleanup();
+    }
+});
