@@ -657,7 +657,7 @@ function initThreeJS() {
     scene.fog = new THREE.FogExp2(0x06021a, 0.055);
 
     // Panoramic 180-degree camera for immersive virtual iftar experience
-    camera = new THREE.PerspectiveCamera(150, innerWidth / innerHeight, 0.01, 60);
+    camera = new THREE.PerspectiveCamera(180, innerWidth / innerHeight, 0.01, 60);
     camera.position.set(0, 1.48, 2.20);
     camera.lookAt(0, 0.88, 0);
 
