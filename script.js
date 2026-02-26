@@ -72,8 +72,8 @@ const VIEW_MODES = [
     { label: '🔭 Wide', fov: 110, name: 'Wide' },
     { label: '🌐 180°', fov: 150, name: 'Panoramic' },
 ];
-let viewModeIdx = 0;
-let fovTarget = 68;
+let viewModeIdx = 2;  // Start with 180° panoramic view
+let fovTarget = 150;   // Initial FOV for panoramic view
 
 // View rotation tracking
 let targetRotX = 0;
@@ -83,6 +83,15 @@ let currRotY = 0;
 const ROT_SENSITIVITY = 0.4;
 const ROT_LIMIT_X = 0.3; // Approx 17 degrees up/down
 const ROT_LIMIT_Y = 0.6; // Approx 34 degrees left/right
+
+// ─── Touch & Mobile Gesture State ─────────────────────────────────────────────
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartDist = 0;
+let touchDragThreshold = 10; // px
+let isMultiTouch = false;
+let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+let isPortrait = window.innerHeight > window.innerWidth;
 
 // ─── App Init ─────────────────────────────────────────────────────────────────
 function init() {
@@ -119,6 +128,7 @@ function init() {
 
     generateAvatarOptions();
     setupEventListeners();
+    initializeViewButton();
     startCountdown();
 }
 
@@ -205,19 +215,107 @@ function setupEventListeners() {
 
     // Viewport following cursor/touch
     window.addEventListener('mousemove', e => {
-        if (currentUser) {
+        if (currentUser && !isMultiTouch) {
             targetRotY = -(e.clientX / window.innerWidth - 0.5) * 2 * ROT_LIMIT_Y;
             targetRotX = -(e.clientY / window.innerHeight - 0.5) * 2 * ROT_LIMIT_X;
         }
     });
 
-    window.addEventListener('touchmove', e => {
-        if (currentUser && e.touches.length > 0) {
-            const touch = e.touches[0];
-            targetRotY = -(touch.clientX / window.innerWidth - 0.5) * 2 * ROT_LIMIT_Y;
-            targetRotX = -(touch.clientY / window.innerHeight - 0.5) * 2 * ROT_LIMIT_X;
+    // Enhanced touch controls for mobile
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    // Handle orientation change
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', handleOrientationChange);
+}
+
+// Initialize view button with correct label for default 180° view
+function initializeViewButton() {
+    const btn = document.getElementById('viewBtn');
+    if (btn) {
+        // Show the NEXT view mode as preview
+        const nextIdx = (viewModeIdx + 1) % VIEW_MODES.length;
+        btn.textContent = VIEW_MODES[nextIdx].label;
+        const currentMode = VIEW_MODES[viewModeIdx];
+        console.log(`Camera initialized to ${currentMode.name} view (${currentMode.fov}°)`);
+    }
+}
+
+// ─── Touch & Gesture Handlers (Mobile Optimization) ────────────────────────────
+function handleTouchStart(e) {
+    if (!currentUser || !e.touches.length) return;
+    
+    isMultiTouch = e.touches.length > 1;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    
+    // Calculate distance between two fingers for pinch zoom
+    if (isMultiTouch && e.touches.length >= 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        touchStartDist = Math.sqrt(dx * dx + dy * dy);
+    }
+}
+
+function handleTouchMove(e) {
+    if (!currentUser || !e.touches.length) return;
+    
+    e.preventDefault(); // Prevent default scrolling
+    
+    const touch = e.touches[0];
+    
+    // Pinch zoom (two-finger gesture)
+    if (isMultiTouch && e.touches.length >= 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const currentDist = Math.sqrt(dx * dx + dy * dy);
+        const zoomDelta = currentDist - touchStartDist;
+        
+        // Zoom out with pinch (decrease FOV)
+        if (zoomDelta < -10) {
+            fovTarget = Math.max(50, fovTarget - 5);
+            touchStartDist = currentDist;
         }
-    }, { passive: false });
+        // Zoom in (increase FOV)
+        else if (zoomDelta > 10) {
+            fovTarget = Math.min(160, fovTarget + 5);
+            touchStartDist = currentDist;
+        }
+    } 
+    // Single touch - pan camera
+    else if (e.touches.length === 1) {
+        const touchDragX = touch.clientX - touchStartX;
+        const touchDragY = touch.clientY - touchStartY;
+        
+        // Apply rotation smoothly from touch movement
+        targetRotY = -(touch.clientX / window.innerWidth - 0.5) * 2 * ROT_LIMIT_Y;
+        targetRotX = -(touch.clientY / window.innerHeight - 0.5) * 2 * ROT_LIMIT_X;
+    }
+}
+
+function handleTouchEnd(e) {
+    isMultiTouch = false;
+    touchStartX = 0;
+    touchStartY = 0;
+    touchStartDist = 0;
+}
+
+// Handle device orientation changes
+function handleOrientationChange() {
+    const wasPortrait = isPortrait;
+    isPortrait = window.innerHeight > window.innerWidth;
+    
+    // Update camera aspect ratio
+    if (camera && renderer) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    // Reposition UI elements if needed (handled by CSS media queries)
+    console.log(`Orientation changed: ${isPortrait ? 'Portrait' : 'Landscape'}`);
 }
 
 function toggleChat() {

@@ -878,16 +878,371 @@ body {
     }
 }
 
-@media (max-width:480px) {
-    .avatar-selection {
-        grid-template-columns: repeat(2, 1fr);
-    }
+/* ──────────────────────── Mobile & Touch Optimization ────────────────────── */
 
+/* Prevent zooming on touch */
+* {
+    touch-action: manipulation;
+}
+
+#threeCanvas {
+    touch-action: none;
+}
+
+/* Mobile: Tablet and smaller (768px and below) */
+@media (max-width: 768px) {
+    /* Larger touch targets for all interactive elements */
+    .ctrl-btn {
+        min-width: 50px;
+        min-height: 44px;
+        padding: 14px 26px;
+        font-size: 0.95rem;
+        gap: 6px;
+    }
+    
+    .action-btn {
+        min-height: 48px;
+        padding: 14px 32px;
+        margin: 6px 6px;
+        font-size: 1.1rem;
+    }
+    
+    /* Avatar options larger on mobile */
+    .avatar-option {
+        width: 80px;
+        height: 110px;
+        min-height: 110px;
+        min-width: 80px;
+    }
+    
+    .avatar-option .cartoon-char {
+        transform: scale(0.72);
+    }
+    
+    /* Chat button repositioned and enlarged for thumb reach */
+    .chat-toggle-btn {
+        min-width: 50px;
+        min-height: 44px;
+        padding: 12px 20px;
+        bottom: auto;
+        right: auto;
+        top: 50%;
+        left: 12px;
+        transform: translateY(-50%);
+        font-size: 0.95rem;
+    }
+    
+    /* Chat popup adjusted for mobile */
+    .chat-popup {
+        bottom: auto;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 90vw;
+        max-width: 420px;
+        height: 60vh;
+        max-height: 500px;
+    }
+    
+    /* Control bar optimization for mobile */
+    .control-bar {
+        padding: 12px 16px;
+        gap: 8px;
+    }
+    
+    .voice-status-indicator {
+        min-height: 44px;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+    }
+    
+    /* Header adjust */
+    .header h1 {
+        font-size: 1.6rem;
+    }
+    
+    .countdown {
+        font-size: 0.95rem;
+        padding: 8px 18px;
+    }
+    
+    .hint-bar {
+        font-size: 0.8rem;
+        padding: 5px 12px;
+    }
+}
+
+/* Mobile: Phone screens (480px and below) */
+@media (max-width: 480px) {
+    /* Avatar selection grid */
+    .avatar-selection {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .avatar-option {
+        width: 75px;
+        height: 105px;
+        border-radius: 12px;
+    }
+    
+    .avatar-option .cartoon-char {
+        transform: scale(0.68);
+    }
+    
+    /* Large touch buttons for mobile */
+    .ctrl-btn {
+        min-width: 45px;
+        min-height: 48px;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+        border-radius: 10px;
+    }
+    
+    .action-btn {
+        min-height: 52px;
+        padding: 14px 26px;
+        margin: 8px 4px;
+        font-size: 1rem;
+        border-radius: 12px;
+    }
+    
+    /* Join button optimization */
+    .join-btn {
+        padding: 16px 32px;
+        font-size: 1.1rem;
+        min-height: 48px;
+        border-radius: 12px;
+    }
+    
+    .input-group input[type=\"text\"],
+    .input-group input[type=\"file\"] {
+        padding: 14px;
+        font-size: 1rem;
+        border-radius: 10px;
+        min-height: 44px;
+    }
+    
+    /* Chat input adjustment */
     .chat-input {
         flex-direction: column;
+        padding: 12px;
+        gap: 8px;
     }
-
+    
+    .chat-input input {
+        padding: 12px;
+        min-height: 44px;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+    
     .chat-input button {
         width: 100%;
+        min-height: 44px;
+        padding: 12px;
+        font-size: 1rem;
+    }
+    
+    .chat-header button {
+        min-width: 44px;
+        min-height: 44px;
+        font-size: 1.4rem;
+    }
+    
+    .chat-toggle-btn {
+        min-width: 48px;
+        min-height: 48px;
+        padding: 12px 16px;
+        font-size: 1rem;
+        bottom: auto;
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+        z-index: 999;
+    }
+    
+    /* Chat popup mobile */
+    .chat-popup {
+        bottom: auto;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 92vw;
+        max-width: 380px;
+        max-height: 70vh;
+        border-radius: 12px;
+    }
+    
+    .chat-header {
+        padding: 14px 14px;
+    }
+    
+    .chat-messages {
+        padding: 12px;
+        font-size: 0.95rem;
+    }
+    
+    .message {
+        margin-bottom: 10px;
+    }
+    
+    /* Control bar vertical stacking on very small screens */
+    .control-bar {
+        flex-direction: column;
+        padding: 10px 12px;
+        gap: 6px;
+        width: 100%;
+    }
+    
+    .ctrl-btn {
+        width: auto;
+        flex: 1;
+        min-width: 45px;
+    }
+    
+    /* Header compact */
+    .header {
+        padding: 12px 16px 10px;
+    }
+    
+    .header h1 {
+        font-size: 1.4rem;
+        margin-bottom: 8px;
+    }
+    
+    .countdown {
+        font-size: 0.9rem;
+        padding: 6px 14px;
+    }
+    
+    .hint-bar {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+    }
+    
+    .ifthar-msg {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+    
+    /* Voice status indicator mobile */
+    .voice-status-indicator {
+        min-height: 40px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .status-text {
+        display: none;
+    }
+    
+    /* Join screen mobile */
+    .join-container {
+        padding: 30px 20px;
+        border-radius: 16px;
+    }
+    
+    .join-container h1 {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+    
+    .join-container p {
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+}
+
+/* Small phones (max 360px) */
+@media (max-width: 360px) {
+    .avatar-selection {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .avatar-option {
+        width: 65px;
+        height: 95px;
+    }
+    
+    .avatar-option .cartoon-char {
+        transform: scale(0.6);
+    }
+    
+    .control-bar {
+        width: 100%;
+    }
+    
+    .ctrl-btn {
+        font-size: 0.8rem;
+        padding: 10px 14px;
+    }
+    
+    .header h1 {
+        font-size: 1.2rem;
+    }
+}
+
+/* Landscape orientation tweaks */
+@media (max-height: 500px) and (orientation: landscape) {
+    .header {
+        padding: 8px 12px 6px;
+    }
+    
+    .header h1 {
+        font-size: 1.2rem;
+        margin-bottom: 4px;
+    }
+    
+    .countdown {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+    }
+    
+    .control-bar {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+    
+    .ctrl-btn {
+        padding: 10px 18px;
+        font-size: 0.85rem;
+    }
+    
+    .chat-toggle-btn {
+        top: 8px;
+        left: 8px;
+    }
+    
+    .hint-bar {
+        display: none;
+    }
+}
+
+/* Improve interaction feedback on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    /* Remove hover effects on touch devices */
+    button:active {
+        transform: scale(0.95);
+    }
+    
+    .ctrl-btn:active {
+        background: rgba(40, 20, 80, 0.9);
+        transform: scale(0.95);
+    }
+    
+    .action-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .chat-toggle-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .avatar-option:active {
+        transform: scale(1.05);
     }
 }
