@@ -656,7 +656,8 @@ function initThreeJS() {
     scene.background = new THREE.Color(0x06021a);
     scene.fog = new THREE.FogExp2(0x06021a, 0.055);
 
-    camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, 0.01, 60);
+    // Panoramic 180-degree camera for immersive virtual iftar experience
+    camera = new THREE.PerspectiveCamera(150, innerWidth / innerHeight, 0.01, 60);
     camera.position.set(0, 1.48, 2.20);
     camera.lookAt(0, 0.88, 0);
 
@@ -715,66 +716,114 @@ function buildLights() {
 
 // ─── Environment (stars, floor, moon) ─────────────────────────────────────────
 function buildEnvironment() {
-    // Starfield
-    const n = 600, pos = new Float32Array(n * 3);
+    // Enhanced Starfield with more stars for panoramic view
+    const n = 1200, pos = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) {
-        pos[i * 3] = (Math.random() - .5) * 40;
-        pos[i * 3 + 1] = Math.random() * 18 + 3;
-        pos[i * 3 + 2] = (Math.random() - .5) * 40;
+        pos[i * 3] = (Math.random() - .5) * 80;          // wider horizontal spread
+        pos[i * 3 + 1] = Math.random() * 25 + 2;         // higher vertical range
+        pos[i * 3 + 2] = (Math.random() - .5) * 60;      // deeper perspective
     }
     const sg = new THREE.BufferGeometry();
     sg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.06, sizeAttenuation: true })));
+    const starMaterial = new THREE.PointsMaterial({ 
+        color: 0xffffff, 
+        size: 0.08, 
+        sizeAttenuation: true
+    });
+    scene.add(new THREE.Points(sg, starMaterial));
 
-    // Floor
+    // Enhanced Floor with improved appearance
     const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(30, 30),
-        new THREE.MeshPhongMaterial({ color: 0x100826 })
+        new THREE.PlaneGeometry(60, 60),
+        new THREE.MeshPhongMaterial({ 
+            color: 0x0a0420,
+            shininess: 5,
+            flatShading: false
+        })
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Moon sphere
+    // Moon sphere - larger for panoramic view
     const moonMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(0.9, 20, 16),
+        new THREE.SphereGeometry(1.2, 24, 20),
         new THREE.MeshBasicMaterial({ color: 0xffe8b0 })
     );
-    moonMesh.position.set(-6, 9, -14);
+    moonMesh.position.set(-8, 11, -18);
     scene.add(moonMesh);
-    const mg = new THREE.Mesh(new THREE.SphereGeometry(1.3, 20, 16),
-        new THREE.MeshBasicMaterial({ color: 0xffe8b0, transparent: true, opacity: 0.12 }));
+    
+    // Moon glow aura
+    const mg = new THREE.Mesh(
+        new THREE.SphereGeometry(2.0, 24, 20),
+        new THREE.MeshBasicMaterial({ 
+            color: 0xffe8b0, 
+            transparent: true, 
+            opacity: 0.08
+        })
+    );
     mg.position.copy(moonMesh.position);
     scene.add(mg);
+    
+    // Atmospheric haze layer for immersion
+    const hazeGeometry = new THREE.SphereGeometry(50, 32, 32);
+    const hazeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x1a0a3e,
+        transparent: true,
+        opacity: 0.15,
+        side: THREE.BackSide
+    });
+    const hazeSphere = new THREE.Mesh(hazeGeometry, hazeMaterial);
+    scene.add(hazeSphere);
 
     // Distant mosque silhouette
     buildMosqueSilhouette();
+    
+    // Additional distant buildings and environment
+    buildDistantEnvironment();
 }
 
 function buildMosqueSilhouette() {
-    const mat = new THREE.MeshBasicMaterial({ color: 0x120630 });
-    // Main dome
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat);
-    dome.position.set(-8, 1.5, -18);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x0a0420 });
+    
+    // Main dome - larger and more prominent
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(2.0, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), mat);
+    dome.position.set(-10, 2.0, -20);
     scene.add(dome);
+    
     // Minaret left
-    const min1 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 5, 8), mat);
-    min1.position.set(-9.8, 2.5, -18);
+    const min1 = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 6, 10), mat);
+    min1.position.set(-12.2, 3.0, -20);
     scene.add(min1);
-    const tip1 = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.8, 8), mat);
-    tip1.position.set(-9.8, 5.4, -18);
+    const tip1 = new THREE.Mesh(new THREE.ConeGeometry(0.18, 1.0, 10), mat);
+    tip1.position.set(-12.2, 6.2, -20);
     scene.add(tip1);
+    
+    // Minaret center
+    const minC = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 6.5, 10), mat);
+    minC.position.set(-10, 3.25, -20);
+    scene.add(minC);
+    const tipC = new THREE.Mesh(new THREE.ConeGeometry(0.15, 1.1, 10), mat);
+    tipC.position.set(-10, 6.8, -20);
+    scene.add(tipC);
+    
     // Minaret right
-    const min2 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 5, 8), mat);
-    min2.position.set(-6.2, 2.5, -18);
+    const min2 = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 6, 10), mat);
+    min2.position.set(-7.8, 3.0, -20);
     scene.add(min2);
-    const tip2 = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.8, 8), mat);
-    tip2.position.set(-6.2, 5.4, -18);
+    const tip2 = new THREE.Mesh(new THREE.ConeGeometry(0.18, 1.0, 10), mat);
+    tip2.position.set(-7.8, 6.2, -20);
     scene.add(tip2);
-    // Body
-    const body = new THREE.Mesh(new THREE.BoxGeometry(5, 2, 1), mat);
-    body.position.set(-8, 1, -18);
+    
+    // Mosque body
+    const body = new THREE.Mesh(new THREE.BoxGeometry(6.5, 2.5, 1.2), mat);
+    body.position.set(-10, 1.25, -20);
     scene.add(body);
+    
+    // Arched entrance
+    const arch = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2.5), mat);
+    arch.position.set(-10, 1.8, -19.4);
+    scene.add(arch);
 }
 
 // ─── Table ────────────────────────────────────────────────────────────────────
@@ -1173,6 +1222,47 @@ function makeUserHead(styleIdx) {
     g.add(body);
 
     return g;
+}
+
+// Distant environment buildings and palm trees
+function buildDistantEnvironment() {
+    const mat = new THREE.MeshBasicMaterial({ color: 0x1a0f35 });
+    
+    // Distant buildings - varying heights
+    const buildings = [
+        { x: -25, z: -35, w: 3, h: 4 },
+        { x: -18, z: -40, w: 2.5, h: 3.5 },
+        { x: -8, z: -42, w: 3.2, h: 4.2 },
+        { x: 8, z: -40, w: 2.8, h: 3.8 },
+        { x: 22, z: -36, w: 3, h: 4 }
+    ];
+    
+    buildings.forEach(b => {
+        const building = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, 1.5), mat);
+        building.position.set(b.x, b.h / 2, b.z);
+        scene.add(building);
+    });
+    
+    // Palm trees - trunks and fronds
+    const palmPositions = [
+        { x: -32, z: -45 },
+        { x: -2, z: -50 },
+        { x: 20, z: -48 },
+        { x: 35, z: -42 }
+    ];
+    
+    palmPositions.forEach(p => {
+        // Trunk
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 8, 8), mat);
+        trunk.position.set(p.x, 4, p.z);
+        scene.add(trunk);
+        
+        // Fronds - green canopy
+        const frondMat = new THREE.MeshBasicMaterial({ color: 0x2d5016 });
+        const fronds = new THREE.Mesh(new THREE.SphereGeometry(2.2, 10, 8), frondMat);
+        fronds.position.set(p.x, 9.2, p.z);
+        scene.add(fronds);
+    });
 }
 
 // Canvas-texture name sprite
