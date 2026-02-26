@@ -1004,12 +1004,14 @@ function buildPlayerHands() {
     const playerBody = makeFullBody(styleIdx);
     playerBody.position.set(0, -0.65, -0.7);
     playerBody.scale.set(0.85, 0.85, 0.85);
+    playerBody.visible = false;  // Hide player's own body to keep view clear
     camera.add(playerBody);
 
     // Create chair beneath player
     const playerChair = makeChair();
     playerChair.position.set(0, -0.92, -0.65);
     playerChair.scale.set(1.2, 1.2, 1.2);
+    playerChair.visible = false;  // Hide chair from first-person view
     camera.add(playerChair);
 
     // Keep old hand references for compatibility, but also keep hands visible
@@ -1116,23 +1118,54 @@ function makeUserHead(styleIdx) {
     const s = avatarStyles[styleIdx] || avatarStyles[0];
     const g = new THREE.Group();
     const skinMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(s.skin), shininess: 14 });
-    const hairMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(s.hair) });
-    const bodyMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(s.body) });
+    const hairMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(s.hair), shininess: 8 });
+    // Use bodyTop for upper body, fallback to body or bodyTop for consistency
+    const bodyMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(s.bodyTop || s.body || '#667eea'), shininess: 10 });
 
-    // Head
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), skinMat);
+    // Head - larger sphere for 3D anime-style proportions
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.11, 14, 12), skinMat);
+    head.castShadow = true;
     g.add(head);
-    // Hair cap
-    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.103, 12, 10, 0, Math.PI * 2, 0, Math.PI * .44), hairMat);
-    hair.position.y = 0.018;
+    
+    // Hair cap - enhanced for anime style
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.114, 14, 12, 0, Math.PI * 2, 0, Math.PI * .48), hairMat);
+    hair.position.y = 0.02;
+    hair.castShadow = true;
     g.add(hair);
-    // Eyes
-    [-0.038, 0.038].forEach(x => {
-        const eye = obj(new THREE.SphereGeometry(0.015, 6, 6), new THREE.MeshBasicMaterial({ color: 0x1a1a2e }), [x, 0.018, 0.09]);
-        g.add(eye);
+    
+    // Hair sides/back for more volume
+    const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.108, 10, 8, 0, Math.PI * 2, Math.PI * 0.4, Math.PI * 0.6), hairMat);
+    hairBack.position.y = -0.01;
+    hairBack.position.z = -0.04;
+    hairBack.castShadow = true;
+    g.add(hairBack);
+    
+    // Eyes - larger and more expressive for anime look
+    [-0.042, 0.042].forEach(x => {
+        const eyeWhite = obj(new THREE.SphereGeometry(0.018, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), [x, 0.022, 0.105]);
+        const pupil = obj(new THREE.SphereGeometry(0.01, 8, 8), new THREE.MeshBasicMaterial({ color: 0x1a1a2e }), [x, 0.018, 0.107]);
+        g.add(eyeWhite);
+        g.add(pupil);
     });
-    // Body
-    const body = obj(new THREE.BoxGeometry(0.13, 0.15, 0.08), bodyMat, [0, -0.19, 0]);
+    
+    // Highlight for eyes (anime sparkle)
+    [-0.042, 0.042].forEach(x => {
+        const highlight = obj(new THREE.SphereGeometry(0.004, 4, 4), new THREE.MeshBasicMaterial({ color: 0xffffff }), [x - 0.004, 0.032, 0.108]);
+        g.add(highlight);
+    });
+    
+    // Nose (subtle)
+    const nose = obj(new THREE.ConeGeometry(0.008, 0.025, 6), new THREE.MeshPhongMaterial({ color: new THREE.Color(s.skin).multiplyScalar(0.85) }), [0, 0.008, 0.105]);
+    nose.rotation.x = Math.PI / 2;
+    g.add(nose);
+    
+    // Mouth
+    const mouth = obj(new THREE.BoxGeometry(0.022, 0.008, 0.01), new THREE.MeshPhongMaterial({ color: 0xff6b9d }), [0, -0.008, 0.105]);
+    g.add(mouth);
+    
+    // Body (torso extension for full-body proportions)
+    const body = obj(new THREE.BoxGeometry(0.14, 0.16, 0.09), bodyMat, [0, -0.21, 0]);
+    body.castShadow = true;
     g.add(body);
 
     return g;
