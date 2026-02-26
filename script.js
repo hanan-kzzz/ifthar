@@ -892,11 +892,15 @@ function makeFullBody(styleIdx) {
     const group = new THREE.Group();
     
     const skinColor = new THREE.Color(s.skin);
-    const bodyColor = new THREE.Color(s.body);
+    // Use anime-style body colors: bodyTop for upper, bodyBottom for lower
+    const bodyTopColor = new THREE.Color(s.bodyTop || s.body || '#667eea');
+    const bodyBottomColor = new THREE.Color(s.bodyBottom || s.body || '#667eea');
+    
     const skinMat = new THREE.MeshPhongMaterial({ color: skinColor, shininess: 14 });
-    const bodyMat = new THREE.MeshPhongMaterial({ color: bodyColor, shininess: 10 });
+    const bodyTopMat = new THREE.MeshPhongMaterial({ color: bodyTopColor, shininess: 10 });
+    const bodyBottomMat = new THREE.MeshPhongMaterial({ color: bodyBottomColor, shininess: 10 });
 
-    // === HEAD (at top, using existing head geometry) ===
+    // === HEAD (at top, using enhanced anime-style head geometry) ===
     const head = makeUserHead(styleIdx);
     head.position.set(0, 0.35, 0);
     group.add(head);
@@ -904,7 +908,7 @@ function makeFullBody(styleIdx) {
     // === TORSO (seated upper body) ===
     const torso = new THREE.Mesh(
         new THREE.CylinderGeometry(0.12, 0.14, 0.26, 8),
-        bodyMat
+        bodyTopMat
     );
     torso.position.set(0, 0.05, 0);
     torso.castShadow = true;
@@ -929,10 +933,10 @@ function makeFullBody(styleIdx) {
     rightArm.castShadow = true;
     group.add(rightArm);
 
-    // === LEGS (bent, seated position) ===
+    // === LEGS (bent, seated position) - using bodyBottom color ===
     const leftLeg = new THREE.Mesh(
         new THREE.CylinderGeometry(0.032, 0.032, 0.28, 6),
-        bodyMat
+        bodyBottomMat
     );
     leftLeg.position.set(-0.08, -0.18, 0.05);
     leftLeg.rotation.z = 0.25;
@@ -941,7 +945,7 @@ function makeFullBody(styleIdx) {
 
     const rightLeg = new THREE.Mesh(
         new THREE.CylinderGeometry(0.032, 0.032, 0.28, 6),
-        bodyMat
+        bodyBottomMat
     );
     rightLeg.position.set(0.08, -0.18, 0.05);
     rightLeg.rotation.z = -0.25;
