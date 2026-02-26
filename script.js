@@ -53,7 +53,7 @@ let socket = null;
 let scene, camera, renderer, clock;
 let playerL, playerR;           // player hand meshes (camera-local)
 let otherMeshes = {};           // userId -> {lh, rh, head, sprite}
-let candleLight, lanternLight;
+let candleLight, lanternLight, ambientLight;
 let candleFlame;                // flame mesh for animation
 let handAnim = { eating: false, drinking: false, t: 0, lerpDir: 1 };
 
@@ -378,7 +378,7 @@ function initThreeJS() {
     const canvas = document.getElementById('threeCanvas');
     renderer = new THREE.WebGLRenderer({ canvas, antialias: devicePixelRatio < 2 });
     renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); // Capped for mobile performance
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -411,7 +411,8 @@ function initThreeJS() {
 
 // ─── Lights ───────────────────────────────────────────────────────────────────
 function buildLights() {
-    scene.add(new THREE.AmbientLight(0x1a0840, 0.5));
+    ambientLight = new THREE.AmbientLight(0x1a0840, 0.5);
+    scene.add(ambientLight);
 
     const moon = new THREE.DirectionalLight(0x8080cc, 0.35);
     moon.position.set(-3, 8, 4);
@@ -584,6 +585,18 @@ function buildFood() {
     const rw = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.03, 0.14, 10), rwMat);
     rw.position.set(0.14, Y + 0.07, 0.25);
     scene.add(rw);
+
+    // ── Table Decoration: Flower Pot ──
+    const potMat = new THREE.MeshPhongMaterial({ color: 0x4d3227 });
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.08, 10), potMat);
+    pot.position.set(-0.6, Y + 0.04, 0.2);
+    scene.add(pot);
+    const flowerMat = new THREE.MeshPhongMaterial({ color: 0xff4d4d });
+    for (let i = 0; i < 3; i++) {
+        const flower = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 6), flowerMat);
+        flower.position.set(-0.6 + (Math.random() - 0.5) * 0.05, Y + 0.12, 0.2 + (Math.random() - 0.5) * 0.05);
+        scene.add(flower);
+    }
 }
 
 // ─── Player Hands (camera-local) ──────────────────────────────────────────────
@@ -799,6 +812,16 @@ function animate() {
         speakRing.scale.setScalar(1 + Math.sin(clock.getElapsedTime() * 12) * 0.08);
     }
 
+    // ── Dynamic Sky (Sunset) ──
+    const remainingSeconds = getRemainingSeconds();
+    if (remainingSeconds < 120 && remainingSeconds > 0) { // Last 2 mins
+        const t_sky = 1 - (remainingSeconds / 120);
+        const skyColor = new THREE.Color(0x06021a).lerp(new THREE.Color(0x2a1040), t_sky * 0.5);
+        scene.background = skyColor;
+        scene.fog.color = skyColor;
+        if (ambientLight) ambientLight.intensity = 0.5 + t_sky * 0.2;
+    }
+
     // ── Viewport following lerp ──
     if (camera) {
         currRotX += (targetRotX - currRotX) * 0.1;
@@ -890,6 +913,14 @@ function updateMicBtn() {
     }
 }
 
+function getRemainingSeconds() {
+    const now = new Date();
+    const [h, m] = IFTAR_TIME.split(':').map(Number);
+    const target = new Date(); target.setHours(h, m, 0, 0);
+    if (now > target) target.setDate(target.getDate() + 1);
+    return Math.floor((target - now) / 1000);
+}
+
 // ─── View Mode ────────────────────────────────────────────────────────────────
 function cycleView() {
     viewModeIdx = (viewModeIdx + 1) % VIEW_MODES.length;
@@ -962,6 +993,7 @@ function eatFood() {
     if (!currentUser || handAnim.eating || handAnim.drinking) return;
     currentUser.plateEaten = true;
     handAnim.eating = true; handAnim.t = 0;
+    if (navigator.vibrate) navigator.vibrate(50);
 
     socket.emit('action', {
         userId: currentUser.id,
@@ -977,6 +1009,7 @@ function drinkWater() {
     if (!currentUser || handAnim.eating || handAnim.drinking) return;
     currentUser.glassDrank = true;
     handAnim.drinking = true; handAnim.t = 0;
+    if (navigator.vibrate) navigator.vibrate([30, 30, 30]);
 
     socket.emit('action', {
         userId: currentUser.id,

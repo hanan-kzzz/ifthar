@@ -4,28 +4,28 @@ A simple multiplayer website where Muslims and non-Muslims can join a virtual if
 
 ## Features
 
-- **Simple 2D Design**: Low graphics, fast loading, mobile and PC compatible
-- **Avatar System**: Choose from various cartoon-style avatars
-- **Virtual Table**: See other users as avatars sitting around a round table
-- **Real-time Chat**: Send and receive messages instantly
-- **Iftar Countdown**: Timer showing time until iftar
-- **Interactive Experience**: Click to eat dates and drink water at iftar time
+- **Immersive 3D Design**: Beautiful 3D environment with dynamic lighting and perspective.
+- **Avatar System**: Choose from various cartoon-style avatars (3D rendered heads).
+- **Virtual Table**: See other users as avatars sitting around a 3D round table.
+- **Real-time Chat**: Integrated chat popup for instant communication.
+- **Iftar Countdown**: Live timer showing time until iftar.
+- **Interactive Experience**: Click to eat dates and drink water with smooth animations.
+- **Voice Chat Support**: Real-time voice activity detection (requires secure context).
 
 ## How to Use
 
-1. Open `index.html` in any web browser
-2. Enter your name
-3. Select an avatar
-4. Click "Join Table"
-5. You'll see other users around the virtual table
-6. Use the chat to communicate with others
-7. When the countdown reaches zero, you can click "Eat Date" and "Drink Water"
+1. Ensure you have Node.js installed.
+2. Run `npm start` (or `node server.js`) in the project directory.
+3. Open your browser and navigate to **`http://localhost:3000`**.
+4. Enter your name and select an avatar.
+5. Click **"Join Table"** to see everyone in 3D.
+6. Use the **"Chat"** button to talk to others.
 
 ## Technology
 
-- **Frontend**: HTML, CSS, JavaScript
-- **No external dependencies**: Works completely offline
-- **Responsive design**: Works on mobile and desktop
+- **Frontend**: HTML5, Vanilla CSS, Three.js (for 3D graphics)
+- **Backend**: Node.js, Express, Socket.io (for real-time multiplayer)
+- **Responsive**: Dynamic FOV and layout for mobile and desktop support.
 
 ## Customization
 

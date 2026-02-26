@@ -2,6 +2,7 @@ services:
   - type: web
     name: virtual-ifthar-table
     runtime: node
+    plan: free
     buildCommand: npm install
     startCommand: node server.js
     envVars:
